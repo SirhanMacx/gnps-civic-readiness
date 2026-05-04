@@ -1,0 +1,30 @@
+# Caddy reverse proxy — terminates HTTPS for the GNPS Civic Readiness Portal.
+# Caddy automatically obtains and renews Let's Encrypt certs for {$CIVICSEAL_DOMAIN}
+# the first time the domain resolves to this server.
+
+{$CIVICSEAL_DOMAIN} {
+    encode gzip zstd
+
+    # Forward to the SvelteKit app
+    reverse_proxy app:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto https
+    }
+
+    # Hardening
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+
+    # Access log
+    log {
+        output stdout
+        format json
+        level INFO
+    }
+}

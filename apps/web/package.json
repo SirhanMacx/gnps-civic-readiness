@@ -10,7 +10,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prebuild": "node -e \"const fs=require('fs');const p='../../scripts/sync-vendored.mjs';if(fs.existsSync(p)){require('child_process').execSync('node '+p,{cwd:'../..',stdio:'inherit'})}else{console.log('vendored sync skipped (running outside monorepo, e.g. Vercel)')}\""
+    "prebuild": "node -e \"const fs=require('fs');const p='../../scripts/sync-vendored.mjs';if(fs.existsSync(p)){require('child_process').execSync('node '+p,{stdio:'inherit'})}else{console.log('vendored sync skipped (running outside monorepo)')}\""
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.5.4",
