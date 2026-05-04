@@ -15,14 +15,14 @@
     {#if form.emailSent}
       <p class="text-sm text-green-900">We've emailed <strong>{form.supervisorEmail}</strong> a confirmation link. Once they click confirm, your hours count toward the 25-hour threshold.</p>
     {:else}
-      <p class="text-sm text-green-900">Your hours have been recorded. <strong>Note:</strong> automatic supervisor email is not yet configured — a counselor will follow up with <strong>{form.supervisorEmail}</strong> directly.</p>
+      <p class="text-sm text-green-900">Your hours have been recorded. Note: automatic supervisor email is not yet configured — a counselor will follow up with <strong>{form.supervisorEmail}</strong> directly.</p>
     {/if}
     {#if form.studentProgressSent}
-      <p class="text-sm text-green-900 mt-2">📊 We just sent your current Seal of Civic Readiness progress to <strong>{form.studentEmail}</strong> — check your inbox.</p>
+      <p class="text-sm text-green-900 mt-2">Progress report sent to <strong>{form.studentEmail}</strong>{#if form.advisorEmail} (cc'd to your advisor at <strong>{form.advisorEmail}</strong>){/if}.</p>
     {:else if form.studentEmail}
-      <p class="text-sm text-green-900 mt-2">Your email is on file ({form.studentEmail}). Progress reports will arrive once email is configured.</p>
+      <p class="text-sm text-green-900 mt-2">Email on file: <strong>{form.studentEmail}</strong>. Progress reports will arrive once email is configured.</p>
     {/if}
-    <p class="text-sm text-green-900 mt-2">You'll add a reflection essay once you reach 25 hours total.</p>
+    <p class="text-sm text-green-900 mt-2">Add a reflection essay once you reach 25 hours total.</p>
     <a href="/submit" class="inline-block mt-3 text-sm text-green-900 underline">Submit more evidence →</a>
   </div>
 {:else}
@@ -38,24 +38,29 @@
       <legend class="px-2 text-xs uppercase tracking-widest font-display font-semibold text-primary">Your information</legend>
       <div class="grid grid-cols-2 gap-4">
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Student ID</span>
-          <input name="studentId" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="GN20271234" />
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Student ID *</span>
+          <input name="studentId" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Graduation year</span>
-          <input name="gradYear" type="number" min="2024" max="2040" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="2027" />
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Graduation year *</span>
+          <input name="gradYear" type="number" min="2024" max="2040" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">First name</span>
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">First name *</span>
           <input name="studentFirstName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Last name</span>
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Last name *</span>
           <input name="studentLastName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block col-span-2">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Your email <span class="text-secondary normal-case">(optional — get a personal progress report after each submission)</span></span>
-          <input name="studentEmail" type="email" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="you@yourname.com or your school email" />
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Your email *</span>
+          <input name="studentEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
+        </label>
+        <label class="block col-span-2">
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Advisor / teacher email *</span>
+          <input name="advisorEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
+          <p class="text-xs text-muted mt-1">Your faculty advisor or sponsoring teacher. They'll be cc'd on your progress reports so they stay informed.</p>
         </label>
       </div>
     </fieldset>
@@ -64,25 +69,26 @@
       <legend class="px-2 text-xs uppercase tracking-widest font-display font-semibold text-primary">Service activity</legend>
       <div class="space-y-4">
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Activity / organization</span>
-          <input name="activityName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Long Island Cares — food bank" />
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Activity / organization *</span>
+          <input name="activityName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <div class="grid grid-cols-2 gap-4">
           <label class="block">
-            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — start</span>
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — start *</span>
             <input name="dateStart" type="date" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
           <label class="block">
-            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — end</span>
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — end *</span>
             <input name="dateEnd" type="date" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
           <label class="block">
-            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Hours this submission</span>
-            <input name="hours" type="number" step="0.5" min="0.5" max="200" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="8" />
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Hours this submission *</span>
+            <input name="hours" type="number" step="0.5" min="0.5" max="200" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
           <label class="block">
-            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Service type (NYSED-defined)</span>
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Service type (NYSED-defined) *</span>
             <select name="serviceType" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-white">
+              <option value="">— pick one —</option>
               <option value="direct">Direct — face-to-face with people you serve</option>
               <option value="indirect">Indirect — meets a need without direct contact</option>
               <option value="advocacy">Advocacy — educating others about an issue</option>
@@ -90,27 +96,27 @@
           </label>
         </div>
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Brief description (1–3 sentences)</span>
-          <textarea name="description" rows="2" maxlength="500" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Sorted donations, restocked shelves, staffed mobile pantry distribution at Westbury location…"></textarea>
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Brief description (1–3 sentences) *</span>
+          <textarea name="description" rows="3" minlength="10" maxlength="500" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary"></textarea>
         </label>
       </div>
     </fieldset>
 
     <fieldset class="border border-border rounded-lg p-5">
       <legend class="px-2 text-xs uppercase tracking-widest font-display font-semibold text-primary">Supervisor</legend>
-      <p class="text-xs text-muted mb-3">We'll email your supervisor a one-click confirmation link. They confirm the hours; the link expires in 14 days. No account needed for them.</p>
+      <p class="text-xs text-muted mb-3">Your supervisor will receive a one-click confirmation link. They confirm the hours; the link expires in 14 days. No account needed for them.</p>
       <div class="space-y-3">
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor name</span>
-          <input name="supervisorName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="J. Patel" />
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor name *</span>
+          <input name="supervisorName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor email</span>
-          <input name="supervisorEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="jpatel@licares.org" />
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor email *</span>
+          <input name="supervisorEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor's organization (optional)</span>
-          <input name="supervisorOrg" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Long Island Cares Inc." />
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor's organization *</span>
+          <input name="supervisorOrg" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
       </div>
     </fieldset>

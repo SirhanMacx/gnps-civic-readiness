@@ -30,11 +30,11 @@
       <div class="grid grid-cols-2 gap-4">
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Student ID</span>
-          <input name="studentId" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="GN20271234" />
+          <input name="studentId" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Graduation year</span>
-          <input name="gradYear" type="number" min="2024" max="2040" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="2027" />
+          <input name="gradYear" type="number" min="2024" max="2040" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">First name</span>
@@ -45,8 +45,13 @@
           <input name="studentLastName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block col-span-2">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Your email <span class="text-secondary normal-case">(optional — get a personal progress report after each submission)</span></span>
-          <input name="studentEmail" type="email" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="you@example.com or your school email" />
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Your email *</span>
+          <input name="studentEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
+        </label>
+        <label class="block col-span-2">
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Advisor / teacher email *</span>
+          <input name="advisorEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
+          <p class="text-xs text-muted mt-1">Your faculty advisor or sponsoring teacher. They'll be cc'd on your progress reports so they stay informed.</p>
         </label>
       </div>
     </fieldset>
@@ -57,11 +62,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label class="block">
             <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Activity / role</span>
-            <input name="activityName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Model UN secretariat · Robotics build team · Summer internship" />
+            <input name="activityName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
           <label class="block">
             <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Organization</span>
-            <input name="organization" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="GNS · Stony Brook ASE Lab · Town of North Hempstead" />
+            <input name="organization" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
         </div>
         <div class="grid grid-cols-2 gap-4">
@@ -75,13 +80,13 @@
           </label>
           <label class="block col-span-2">
             <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Hours this submission</span>
-            <input name="hours" type="number" step="0.5" min="0.5" max="500" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="6" />
+            <input name="hours" type="number" step="0.5" min="0.5" max="500" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
             <span class="text-xs text-muted mt-1 block">Submit individual blocks of hours over time. The 40-hour threshold for Pathway 2e accumulates across all confirmed submissions.</span>
           </label>
         </div>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Description (1–2 short paragraphs)</span>
-          <textarea name="description" rows="5" minlength="20" maxlength="1500" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Describe what you did, the responsibilities you held, and what civic-readiness skills, knowledge, or mindsets you developed."></textarea>
+          <textarea name="description" rows="5" minlength="20" maxlength="1500" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary"></textarea>
         </label>
       </div>
     </fieldset>
@@ -92,15 +97,15 @@
       <div class="space-y-3">
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor name</span>
-          <input name="supervisorName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Coach R. Rivera" />
+          <input name="supervisorName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor email</span>
-          <input name="supervisorEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="rrivera@greatneck.k12.ny.us" />
+          <input name="supervisorEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor's organization (optional)</span>
-          <input name="supervisorOrg" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="GNS Athletics · Town clerk's office" />
+          <input name="supervisorOrg" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
       </div>
     </fieldset>

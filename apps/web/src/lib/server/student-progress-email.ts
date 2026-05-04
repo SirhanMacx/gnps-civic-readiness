@@ -221,6 +221,8 @@ export interface ProgressEmailInput {
   studentFirstName: string;
   studentLastName: string;
   justSubmittedPathway: string;
+  /** Optional advisor / teacher email; CC'd on the progress report so they stay informed. */
+  advisorEmail?: string;
 }
 
 export interface ProgressEmailResult {
@@ -243,6 +245,7 @@ export async function sendStudentProgressEmail(input: ProgressEmailInput): Promi
 
   const result = await sendEmail({
     to: input.studentEmail,
+    cc: input.advisorEmail ? [input.advisorEmail] : undefined,
     subject: `Your Seal of Civic Readiness progress — ${progress.total.toFixed(1)} / 6.0`,
     html
   });

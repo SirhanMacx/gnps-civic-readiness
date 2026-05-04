@@ -40,11 +40,11 @@
       <div class="grid grid-cols-2 gap-4">
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Student ID</span>
-          <input name="studentId" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="GN20271234" />
+          <input name="studentId" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Graduation year</span>
-          <input name="gradYear" type="number" min="2024" max="2040" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="2027" />
+          <input name="gradYear" type="number" min="2024" max="2040" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">First name</span>
@@ -55,8 +55,13 @@
           <input name="studentLastName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
         <label class="block col-span-2">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Your email <span class="text-secondary normal-case">(optional — get a personal progress report after each submission)</span></span>
-          <input name="studentEmail" type="email" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="you@example.com or your school email" />
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Your email *</span>
+          <input name="studentEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
+        </label>
+        <label class="block col-span-2">
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Advisor / teacher email *</span>
+          <input name="advisorEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
+          <p class="text-xs text-muted mt-1">Your faculty advisor or sponsoring teacher. They'll be cc'd on your progress reports so they stay informed.</p>
         </label>
       </div>
     </fieldset>
@@ -66,7 +71,7 @@
       <div class="space-y-4">
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">The civic issue you've identified</span>
-          <textarea name="issueIdentified" rows="4" minlength="30" maxlength="2000" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Describe the civic issue, its civic significance, and why it matters now."></textarea>
+          <textarea name="issueIdentified" rows="4" minlength="30" maxlength="2000" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary"></textarea>
           <span class="text-xs text-muted mt-1 block">Minimum 30 characters. Capstones address an issue with depth and stakes — be specific.</span>
         </label>
         <label class="block">
@@ -85,7 +90,7 @@
       <legend class="px-2 text-xs uppercase tracking-widest font-display font-semibold text-primary">Elements 2–4 — Civic-experience plan</legend>
       <label class="block">
         <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">How will you apply civic knowledge / skills / actions / mindsets · engage in a civic experience to influence positive change · present to the SCRC?</span>
-        <textarea name="civicExperiencePlan" rows="10" minlength="30" maxlength="3000" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Cover all three remaining elements explicitly:&#10;&#10;Element 2 — Apply civic knowledge, skills, actions, and mindsets: ...&#10;&#10;Element 3 — Engage in a civic experience to influence positive change: ...&#10;&#10;Element 4 — Present the project to the SCRC: ..."></textarea>
+        <textarea name="civicExperiencePlan" rows="10" minlength="30" maxlength="3000" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary"></textarea>
         <span class="text-xs text-muted mt-1 block">Minimum 30 characters. The SCRC will look for explicit treatment of all three remaining essential elements.</span>
       </label>
     </fieldset>
@@ -129,7 +134,7 @@
       <legend class="px-2 text-xs uppercase tracking-widest font-display font-semibold text-primary">Advisor</legend>
       <label class="block">
         <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Faculty advisor</span>
-        <input name="advisorName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Ms. T. Maue" />
+        <input name="advisorName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         <span class="text-xs text-muted mt-1 block">A GNPS teacher who will mentor this capstone through proposal, work, and presentation.</span>
       </label>
     </fieldset>

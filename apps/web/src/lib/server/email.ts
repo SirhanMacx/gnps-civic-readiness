@@ -127,6 +127,8 @@ function getTransport(cfg: SmtpConfig): Transporter {
 
 export interface SendEmailInput {
   to: string;
+  /** Optional CC list — used to copy the student's faculty advisor on progress reports. */
+  cc?: string[];
   subject: string;
   html: string;
   text?: string;
@@ -156,6 +158,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     const info = await transporter.sendMail({
       from: cfg.from,
       to: input.to,
+      cc: input.cc && input.cc.length > 0 ? input.cc : undefined,
       subject: input.subject,
       html: input.html,
       text: input.text

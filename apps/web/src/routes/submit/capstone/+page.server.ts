@@ -12,6 +12,7 @@ export const actions: Actions = {
       studentLastName: form.get('studentLastName'),
       studentFirstName: form.get('studentFirstName'),
       studentEmail: form.get('studentEmail') ?? '',
+      advisorEmail: form.get('advisorEmail') ?? '',
       gradYear: Number(form.get('gradYear')),
       pathwayType: 'hs_capstone',
       issueIdentified: form.get('issueIdentified'),
@@ -32,6 +33,7 @@ export const actions: Actions = {
           studentEmail: parsed.data.studentEmail,
           studentFirstName: parsed.data.studentFirstName,
           studentLastName: parsed.data.studentLastName,
+          advisorEmail: parsed.data.advisorEmail,
           justSubmittedPathway: 'hs_capstone'
         });
         progressSent = r.ok;

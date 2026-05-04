@@ -11,6 +11,7 @@ export const actions: Actions = {
       studentLastName: form.get('studentLastName'),
       studentFirstName: form.get('studentFirstName'),
       studentEmail: form.get('studentEmail') ?? '',
+      advisorEmail: form.get('advisorEmail') ?? '',
       gradYear: Number(form.get('gradYear')),
       activityName: form.get('activityName'),
       organization: form.get('organization') ?? form.get('activityName'),
@@ -34,6 +35,7 @@ export const actions: Actions = {
           studentEmail: parsed.data.studentEmail,
           studentFirstName: parsed.data.studentFirstName,
           studentLastName: parsed.data.studentLastName,
+          advisorEmail: parsed.data.advisorEmail,
           justSubmittedPathway: 'wbl_extracurr'
         });
         progressSent = r.ok;

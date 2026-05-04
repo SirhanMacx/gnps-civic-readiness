@@ -3,21 +3,22 @@ import { supabaseAdmin } from './supabase.js';
 import { getStorage } from './storage.js';
 
 export const ServiceSubmissionSchema = z.object({
-  studentId: z.string().min(3).max(40),
-  studentLastName: z.string().min(1).max(80),
-  studentFirstName: z.string().min(1).max(80),
-  studentEmail: z.string().email().max(200).optional().or(z.literal('')),
+  studentId: z.string().min(3, 'Student ID is required').max(40),
+  studentLastName: z.string().min(1, 'Last name is required').max(80),
+  studentFirstName: z.string().min(1, 'First name is required').max(80),
+  studentEmail: z.string().email('Valid student email is required').max(200),
   gradYear: z.number().int().min(2024).max(2040),
-  activityName: z.string().min(2).max(200),
+  advisorEmail: z.string().email('Valid advisor / teacher email is required').max(200),
+  activityName: z.string().min(2, 'Activity / organization is required').max(200),
   organization: z.string().min(2).max(200),
   serviceType: z.enum(['direct', 'indirect', 'advocacy']),
   hours: z.number().positive().max(200),
-  dateStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  dateEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  description: z.string().max(500).optional().default(''),
-  supervisorName: z.string().min(2).max(120),
-  supervisorEmail: z.string().email().max(200),
-  supervisorOrg: z.string().max(200).optional().default('')
+  dateStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date required'),
+  dateEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date required'),
+  description: z.string().min(10, 'Description required (10+ chars)').max(500),
+  supervisorName: z.string().min(2, 'Supervisor name is required').max(120),
+  supervisorEmail: z.string().email('Valid supervisor email is required').max(200),
+  supervisorOrg: z.string().min(2, 'Supervisor organization is required').max(200)
 });
 export type ServiceSubmission = z.infer<typeof ServiceSubmissionSchema>;
 
@@ -90,20 +91,27 @@ export async function createServiceSubmission(input: ServiceSubmission): Promise
 }
 
 // --- Identity helper -------------------------------------------------------
+//
+// All identity fields are required. studentEmail captures the student's
+// preferred contact for the auto progress-report email. advisorEmail
+// CCs the student's faculty advisor on those progress reports so the
+// teacher / mentor stays in the loop without the student having to remember
+// to forward.
 
 const IdentityShape = {
-  studentId: z.string().min(3).max(40),
-  studentLastName: z.string().min(1).max(80),
-  studentFirstName: z.string().min(1).max(80),
-  studentEmail: z.string().email().max(200).optional().or(z.literal('')),
-  gradYear: z.number().int().min(2024).max(2040)
+  studentId: z.string().min(3, 'Student ID is required').max(40),
+  studentLastName: z.string().min(1, 'Last name is required').max(80),
+  studentFirstName: z.string().min(1, 'First name is required').max(80),
+  studentEmail: z.string().email('Valid student email is required').max(200),
+  gradYear: z.number().int().min(2024).max(2040),
+  advisorEmail: z.string().email('Valid advisor / teacher email is required').max(200)
 } as const;
 
 async function upsertStudent(sb: SupabaseClientLike, data: {
   studentId: string;
   studentLastName: string;
   studentFirstName: string;
-  studentEmail?: string;
+  studentEmail: string;
   gradYear: number;
 }): Promise<void> {
   const { error } = await sb.from('students').upsert(
@@ -112,7 +120,7 @@ async function upsertStudent(sb: SupabaseClientLike, data: {
       last_name: data.studentLastName,
       first_name: data.studentFirstName,
       grad_year: data.gradYear,
-      ...(data.studentEmail ? { email: data.studentEmail } : {})
+      email: data.studentEmail
     },
     { onConflict: 'id' }
   );

@@ -1,0 +1,236 @@
+<h1 id="nys-seal-of-civic-readiness-portal-executive-summary">NYS Seal
+of Civic Readiness Portal — Executive Summary</h1>
+<p><strong>For:</strong> Great Neck Public Schools leadership · district
+administration · Board of Education <strong>Project lead:</strong> Jon ·
+Social Studies Department <strong>Status:</strong> v0.2.0 —
+feature-complete, ready for GNPS-hosted deployment</p>
+<hr />
+<h2 id="what-this-is">What this is</h2>
+<p>A web portal that <strong>organizes and tracks every student’s
+progress toward the New York State Seal of Civic Readiness</strong> —
+the +1 Diploma Pathway approved by the Board of Regents in 2021. The
+Seal recognizes students who demonstrate civic knowledge, civic skills,
+civic mindsets, and civic experiences across grades 9–12.</p>
+<p>Today, GNPS has no infrastructure for this. Peer Long Island
+districts (Seaford, 3 Village, Connetquot) collect evidence with
+Microsoft or Google Forms feeding counselor inboxes — no central
+tracker, no live progress, no audit trail. <strong>Great Neck can do
+better.</strong></p>
+<h2 id="whats-been-built">What’s been built</h2>
+<p>A fully-functional portal that handles every NYSED-defined pathway.
+Students submit evidence; supervisors confirm hours by email; teachers
+push points for class-wide projects; counselors and the Civic Readiness
+Committee review and approve; admins generate the year-end NYSED audit
+pack.</p>
+<p>Under the hood: 11 pathways (NYSED-compliant), 10 schema migrations,
+62 automated tests, MIT-licensed open-source code on GitHub,
+Docker-based self-hosted deployment for GNPS infrastructure (zero
+third-party SaaS, zero recurring cost).</p>
+<h2 id="what-it-does-for-each-audience">What it does for each
+audience</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Audience</th>
+<th>What they get</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Students</strong></td>
+<td>A single GNPS-branded URL to submit hours, projects, and
+reflections. After every submission, an automatic personalized progress
+report email arrives — current points, what’s still needed, recent
+activity.</td>
+</tr>
+<tr>
+<td><strong>Families</strong></td>
+<td>The same progress report cc’d to the student’s faculty advisor.
+Phase 2: family-visible read-only dashboard.</td>
+</tr>
+<tr>
+<td><strong>Teachers</strong></td>
+<td>Quick-Push UI: pick a pathway (e.g. “1.5 pts for HS Civic Project”),
+paste a class roster, push the points to all students in one action.
+NYSED cap rules enforced automatically.</td>
+</tr>
+<tr>
+<td><strong>Counselors</strong></td>
+<td>Live caseload roster with auto-counted points from Infinite Campus
+data. Approval queue for reflections + supervisor-confirmed hours.
+Per-student PDF audit pack download.</td>
+</tr>
+<tr>
+<td><strong>Civic Readiness Committee</strong></td>
+<td>Topic-approval queue (pre-work) + scoring queue (post-work) using
+the official NYSED rubrics for research projects, civic projects, and
+the capstone.</td>
+</tr>
+<tr>
+<td><strong>Admin / Curriculum office</strong></td>
+<td>Full cohort roster, IC CSV import (auto-counts ~50–80% of points
+without student input), course catalog management, staff invites,
+year-end NYSED audit-pack zip export.</td>
+</tr>
+<tr>
+<td><strong>GNPS IT</strong></td>
+<td>Docker stack (<code>docker compose up</code>) on a single Linux VM.
+No third-party SaaS. Migration runner. Backup script. Full ops
+runbook.</td>
+</tr>
+<tr>
+<td><strong>NYSED auditors</strong></td>
+<td>Per-student audit-record PDF with point breakdown, evidence list,
+rubric scores, and audit-log excerpt. Roster CSV of all awarded
+students. Bundled as a year-end zip.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="why-this-matters-strategically">Why this matters
+strategically</h2>
+<ol type="1">
+<li><strong>Closes a competitive gap.</strong> Peer districts already
+have programs; GNPS doesn’t. Launching gives our students the same NYSED
+recognition.</li>
+<li><strong>Surpasses peer implementations.</strong> Their forms-based
+approaches lose evidence and stress counselors at year-end. Ours is a
+real tracker with audit defensibility.</li>
+<li><strong>Serves civics education well.</strong> The NYSED Seal is
+structurally aligned with the kind of civic engagement Great Neck values
+— service learning, advocacy projects, AP government, capstones. The
+portal makes it easy to recognize students who are already doing this
+work.</li>
+<li><strong>District-controlled, district-owned.</strong> Self-hosted on
+GNPS infrastructure. Student data never leaves the district.
+FERPA-compliant by architecture.</li>
+<li><strong>Open-source artifact.</strong> Other Long Island and NYS
+districts can adopt the GNPS implementation. Positions Great Neck as the
+originator of an open civic-readiness standard.</li>
+</ol>
+<h2 id="whats-needed-to-go-live">What’s needed to go live</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stakeholder</th>
+<th>Action</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Curriculum &amp; Instruction</td>
+<td>Apply to NYSED via the SED Application Business Portal (~30 days
+state review)</td>
+<td>one-time</td>
+</tr>
+<tr>
+<td>C&amp;I + Social Studies</td>
+<td>Form / formalize the Seal of Civic Readiness Committee
+(NYSED-required body that approves project topics + scores
+capstones)</td>
+<td>one-time</td>
+</tr>
+<tr>
+<td>GNPS Technology</td>
+<td>Provision a Linux VM, set up DNS, provide SMTP credentials, run
+<code>docker compose up</code></td>
+<td>~half a day</td>
+</tr>
+<tr>
+<td>Privacy / Compliance</td>
+<td>FERPA review of self-hosted architecture</td>
+<td>~1 hour</td>
+</tr>
+</tbody>
+</table>
+<p>Detailed runbook at <a
+href="it-runbook.md"><code>docs/it-runbook.md</code></a>. IT-specific
+brief at <a
+href="it-handoff-brief.md"><code>docs/it-handoff-brief.md</code></a>.
+Full design document available as a polished PDF.</p>
+<h2 id="cost">Cost</h2>
+<p><strong>$0/month</strong> in third-party fees. Runs on existing GNPS
+infrastructure. The only ongoing cost is the IT staff time for
+deployment + maintenance (estimated &lt;1 hour/week at steady
+state).</p>
+<h2 id="timeline">Timeline</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Research, design, spec, plan</td>
+<td>✅ done</td>
+</tr>
+<tr>
+<td>Phase 1 development</td>
+<td>✅ done — feature-complete on Vercel/Supabase free tier as a working
+demo</td>
+</tr>
+<tr>
+<td>Phase 1.5 self-host migration</td>
+<td>✅ done — zero SaaS dependencies, Docker stack, full IT runbook</td>
+</tr>
+<tr>
+<td>GNPS IT deployment</td>
+<td>pending IT scheduling</td>
+</tr>
+<tr>
+<td>First pilot cohort (Class of 2027)</td>
+<td>targeted for fall 2026 onboarding</td>
+</tr>
+<tr>
+<td>First seals awarded</td>
+<td>targeted for June 2027 graduation</td>
+</tr>
+<tr>
+<td>Phase 2: live IC integration + student SSO</td>
+<td>targeted for school year 2027–28</td>
+</tr>
+</tbody>
+</table>
+<h2 id="source-transparency">Source + transparency</h2>
+<ul>
+<li><strong>GitHub:</strong>
+https://github.com/SirhanMacx/gnps-civic-readiness — public,
+MIT-licensed</li>
+<li><strong>Latest release:</strong> v0.2.0 (2026-05-04) at
+https://github.com/SirhanMacx/gnps-civic-readiness/releases/tag/v0.2.0</li>
+<li><strong>Live demo (legacy free-tier; superseded by
+self-host):</strong> https://gnps-civic-readiness.vercel.app</li>
+</ul>
+<h2 id="asks-of-leadership">Asks of leadership</h2>
+<ol type="1">
+<li><strong>Approve</strong> the program launch as a district priority
+for the 2026–27 school year.</li>
+<li><strong>Authorize</strong> Curriculum &amp; Instruction to file the
+NYSED application.</li>
+<li><strong>Authorize</strong> GNPS Technology to provision the
+deployment.</li>
+<li><strong>Form</strong> the Seal of Civic Readiness Committee with
+members who can pre-approve projects and score capstones
+(NYSED-required).</li>
+<li><strong>Approve</strong> the open-source publication and
+(eventually) the transfer of the GitHub repo to a GNPS-owned
+organization.</li>
+</ol>
+<h2 id="contact">Contact</h2>
+<p>Jon · Social Studies Department · Great Neck Public Schools ·
+civicseal@greatneck.k12.ny.us</p>
