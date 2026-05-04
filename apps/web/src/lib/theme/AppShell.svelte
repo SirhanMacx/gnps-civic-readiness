@@ -55,7 +55,7 @@
           </span>
           <a href="/logout" class="hover:underline opacity-90 hover:opacity-100" data-testid="logout-link">Logout</a>
         {:else}
-          <a href="/login" class="bg-white/15 hover:bg-white/25 px-4 py-1.5 rounded transition">Staff Login</a>
+          <a href="/login" class="btn btn-on-primary text-xs">Staff Login</a>
         {/if}
       </nav>
     </div>
