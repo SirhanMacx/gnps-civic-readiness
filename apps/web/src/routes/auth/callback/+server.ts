@@ -1,14 +1,21 @@
 /**
- * Magic-link callback. Supabase redirects here after the user clicks the
- * email link. We exchange the OAuth code for a session, then route to the
- * role home (/admin, /scrc, /counselor).
+ * Magic-link callback. The mailed link points here with `?token=…`.
  *
- * If the email isn't in the `users` table, we sign out and bounce to
- * /login?error=no_role — admins must invite staff explicitly (no auto-create).
+ *   1. consumeAuthToken(token) — verifies, marks consumed, returns email
+ *   2. getStaffUserByEmail(email) — locates the staff row
+ *   3. signSession(...) — mints a 30-day JWT
+ *   4. setSessionCookie + redirect to ?next or role-home
+ *
+ * Failure paths:
+ *   - missing token         → /login?error=invalid_link
+ *   - expired/consumed token → /login?error=invalid_or_expired
+ *   - email not in users    → /login?error=no_role
  */
 
 import { redirect, type RequestHandler } from '@sveltejs/kit';
-import { supabaseAdmin } from '$server/supabase.js';
+import { consumeAuthToken } from '$server/auth-tokens.js';
+import { getStaffUserByEmail } from '$server/auth.js';
+import { signSession, setSessionCookie } from '$server/session.js';
 
 function homeFor(role: string | null | undefined): string {
   if (role === 'admin') return '/admin';
@@ -17,44 +24,36 @@ function homeFor(role: string | null | undefined): string {
   return '/login?error=no_role';
 }
 
-export const GET: RequestHandler = async ({ url, locals }) => {
-  const code = url.searchParams.get('code');
+export const GET: RequestHandler = async ({ url, cookies }) => {
+  const token = url.searchParams.get('token');
   const next = url.searchParams.get('next');
-  const errorCode = url.searchParams.get('error_code') ?? url.searchParams.get('error');
 
-  if (errorCode) {
-    const code = errorCode === 'otp_expired' || errorCode.includes('expired') ? 'expired' : 'invalid_link';
-    throw redirect(303, `/login?error=${code}`);
-  }
-
-  if (!code) {
+  if (!token) {
     throw redirect(303, '/login?error=invalid_link');
   }
 
-  const { data, error: exchangeErr } = await locals.supabase.auth.exchangeCodeForSession(code);
-  if (exchangeErr || !data.user?.email) {
-    throw redirect(303, '/login?error=invalid_link');
+  const email = await consumeAuthToken(token);
+  if (!email) {
+    throw redirect(303, '/login?error=invalid_or_expired');
   }
 
-  // Look up the staff user by email. No auto-create — admins invite explicitly.
-  const admin = supabaseAdmin();
-  const { data: staffRow } = await admin
-    .from('users')
-    .select('role')
-    .ilike('email', data.user.email)
-    .maybeSingle();
-
-  if (!staffRow) {
-    // Authenticated but unprovisioned — sign them out so the cookie doesn't linger.
-    await locals.supabase.auth.signOut();
+  const staff = await getStaffUserByEmail(email);
+  if (!staff) {
     throw redirect(303, '/login?error=no_role');
   }
 
-  // Sanitize next: only allow internal absolute paths
+  const jwt = await signSession({
+    userId: staff.id,
+    email: staff.email,
+    role: staff.role
+  });
+  setSessionCookie(cookies, jwt);
+
+  // Sanitize next: only allow internal absolute paths.
   const safeNext =
     next && /^\/[A-Za-z0-9_\-/.?=&%]*$/.test(next) && !next.startsWith('//')
       ? next
       : null;
 
-  throw redirect(303, safeNext ?? homeFor(staffRow.role as string));
+  throw redirect(303, safeNext ?? homeFor(staff.role));
 };

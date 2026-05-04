@@ -234,16 +234,29 @@ interface RawSubmissionRow {
   submitted_at: string | null;
   domain_tags: string[] | null;
   proposal_data: Record<string, unknown> | null;
-  students: { first_name: string; last_name: string; grad_year: number } | null;
+  /** Optional embedded students payload (legacy supabase shape; kept for tests). */
+  students?: { first_name: string; last_name: string; grad_year: number } | null;
 }
 
-function mapQueueRow(r: RawSubmissionRow): QueueRow {
+interface StudentLookupRow {
+  id: string;
+  first_name: string;
+  last_name: string;
+  grad_year: number;
+}
+
+function mapQueueRow(
+  r: RawSubmissionRow,
+  studentByIdOrInline?: Map<string, StudentLookupRow>
+): QueueRow {
   const proposal = (r.proposal_data ?? {}) as {
     issue_identified?: string;
     scope?: string;
     advisor_name?: string;
   };
-  const student = r.students;
+  const inline = r.students;
+  const looked = studentByIdOrInline?.get(r.student_id);
+  const student = inline ?? looked ?? null;
   const fullName = student
     ? `${student.first_name} ${student.last_name}`.trim()
     : '(unknown student)';
@@ -263,22 +276,45 @@ function mapQueueRow(r: RawSubmissionRow): QueueRow {
   };
 }
 
+async function lookupStudents(
+  sb: ReturnType<typeof supabaseAdmin>,
+  studentIds: readonly string[]
+): Promise<Map<string, StudentLookupRow>> {
+  const map = new Map<string, StudentLookupRow>();
+  if (studentIds.length === 0) return map;
+  const { data, error } = await sb
+    .from('students')
+    .select('id, first_name, last_name, grad_year')
+    .in('id', studentIds);
+  if (error || !data) return map;
+  for (const r of data as unknown as StudentLookupRow[]) {
+    map.set(r.id, r);
+  }
+  return map;
+}
+
 /**
  * List submissions awaiting topic approval. Status='proposed' on project pathways.
+ *
+ * Joining `students` once was a Supabase nicety. Post-migration we fetch the
+ * submission rows first, then issue a single follow-up `IN (...)` over students
+ * — avoiding the embedded-resource syntax the direct-Postgres facade doesn't
+ * model.
  */
 export async function listProposalQueue(): Promise<QueueRow[]> {
   const sb = supabaseAdmin();
   const { data, error } = await sb
     .from('pathway_submissions')
     .select(
-      'id, student_id, pathway_type, status, proposed_at, submitted_at, domain_tags, proposal_data, students!inner(first_name, last_name, grad_year)'
+      'id, student_id, pathway_type, status, proposed_at, submitted_at, domain_tags, proposal_data'
     )
     .eq('status', 'proposed')
     .in('pathway_type', SCRC_PATHWAY_TYPES as unknown as string[])
     .order('proposed_at', { ascending: true });
   if (error) throw new Error(`listProposalQueue failed: ${error.message}`);
   const rows = (data ?? []) as unknown as RawSubmissionRow[];
-  return rows.map(mapQueueRow);
+  const studentMap = await lookupStudents(sb, rows.map((r) => r.student_id));
+  return rows.map((r) => mapQueueRow(r, studentMap));
 }
 
 /**
@@ -289,14 +325,15 @@ export async function listScoringQueue(): Promise<QueueRow[]> {
   const { data, error } = await sb
     .from('pathway_submissions')
     .select(
-      'id, student_id, pathway_type, status, proposed_at, submitted_at, domain_tags, proposal_data, students!inner(first_name, last_name, grad_year)'
+      'id, student_id, pathway_type, status, proposed_at, submitted_at, domain_tags, proposal_data'
     )
     .eq('status', 'submitted')
     .in('pathway_type', SCRC_PATHWAY_TYPES as unknown as string[])
     .order('submitted_at', { ascending: true });
   if (error) throw new Error(`listScoringQueue failed: ${error.message}`);
   const rows = (data ?? []) as unknown as RawSubmissionRow[];
-  return rows.map(mapQueueRow);
+  const studentMap = await lookupStudents(sb, rows.map((r) => r.student_id));
+  return rows.map((r) => mapQueueRow(r, studentMap));
 }
 
 /**
@@ -330,7 +367,7 @@ export async function getSubmissionDetail(submissionId: number): Promise<Submiss
   const { data, error } = await sb
     .from('pathway_submissions')
     .select(
-      'id, student_id, pathway_type, status, proposed_at, submitted_at, scored_at, topic_approved_at, points_awarded, domain_tags, proposal_data, rubric_scores, notes, students!inner(first_name, last_name, grad_year)'
+      'id, student_id, pathway_type, status, proposed_at, submitted_at, scored_at, topic_approved_at, points_awarded, domain_tags, proposal_data, rubric_scores, notes'
     )
     .eq('id', submissionId)
     .maybeSingle();
@@ -343,7 +380,8 @@ export async function getSubmissionDetail(submissionId: number): Promise<Submiss
     scored_at: string | null;
     topic_approved_at: string | null;
   };
-  const base = mapQueueRow(row);
+  const studentMap = await lookupStudents(sb, [row.student_id]);
+  const base = mapQueueRow(row, studentMap);
   return {
     ...base,
     rubricScores: row.rubric_scores ?? {},
@@ -567,9 +605,14 @@ export interface EvidenceFileLink {
  * for each file. The `evidence_files` table may not exist yet in some Phase 1
  * dev environments, in which case this returns []. Errors are swallowed and
  * logged — the review page should still render.
+ *
+ * Storage URLs come from `getStorage()` (filesystem-default; S3 if
+ * `STORAGE_BACKEND=s3`). Signed URLs are HMAC-tokens consumed by
+ * `/api/evidence/[token]`, with an additional staff-role gate enforced server-side.
  */
 export async function getEvidenceLinks(submissionId: number): Promise<EvidenceFileLink[]> {
   const sb = supabaseAdmin();
+  const { getStorage } = await import('./storage.js');
 
   let rows: { storage_path: string; filename: string }[] = [];
   try {
@@ -591,14 +634,11 @@ export async function getEvidenceLinks(submissionId: number): Promise<EvidenceFi
   const out: EvidenceFileLink[] = [];
   for (const r of rows) {
     try {
-      const { data, error } = await sb.storage
-        .from('evidence')
-        .createSignedUrl(r.storage_path, 3600);
+      const url = await getStorage().signedUrl(r.storage_path, 3600);
       out.push({
         filename: r.filename,
-        signedUrl: data?.signedUrl ?? null,
-        storagePath: r.storage_path,
-        warning: error?.message
+        signedUrl: url,
+        storagePath: r.storage_path
       });
     } catch (e) {
       out.push({

@@ -164,24 +164,47 @@ export async function listApprovalQueue(opts: {
 } = {}): Promise<ApprovalQueueItem[]> {
   const sb = supabaseAdmin();
 
-  // Pull pathway_submissions in 'submitted' or 'scored' status, joined to students.
-  let query = sb
+  // Pull pathway_submissions in 'submitted' or 'scored' status. Students are
+  // looked up in a separate IN(...) batch — the direct-Postgres facade
+  // doesn't model embedded joins.
+  const query = sb
     .from('pathway_submissions')
     .select(
       'id, student_id, pathway_type, status, submitted_at, scored_at, notes, ' +
-        'domain_tags, proposal_data, ' +
-        'students!inner(id, last_name, first_name, grad_year, counselor_id)',
+        'domain_tags, proposal_data',
     )
     .in('status', ['submitted', 'scored'])
     .order('submitted_at', { ascending: true });
 
-  if (opts.counselorId) {
-    query = query.eq('students.counselor_id', opts.counselorId);
-  }
-
   const { data: subsRaw, error: eSub } = await query;
   if (eSub) throw new Error(`pathway_submissions.select failed: ${eSub.message}`);
-  const subs = (subsRaw ?? []) as Array<any>;
+  const allSubs = (subsRaw ?? []) as Array<any>;
+  if (allSubs.length === 0) return [];
+
+  // Look up the matching students in one IN() roundtrip; optionally filter to caseload.
+  const studentIds = Array.from(new Set(allSubs.map((s) => s.student_id as string)));
+  let studentQuery = sb
+    .from('students')
+    .select('id, last_name, first_name, grad_year, counselor_id')
+    .in('id', studentIds);
+  if (opts.counselorId) {
+    studentQuery = studentQuery.eq('counselor_id', opts.counselorId);
+  }
+  const { data: studentRaw, error: eStu } = await studentQuery;
+  if (eStu) throw new Error(`students.select failed: ${eStu.message}`);
+  const studentsById = new Map<string, {
+    id: string;
+    last_name: string;
+    first_name: string;
+    grad_year: number;
+    counselor_id: string | null;
+  }>();
+  for (const s of (studentRaw ?? []) as Array<any>) {
+    studentsById.set(s.id as string, s);
+  }
+  // If a counselor filter is in play, drop submissions whose student isn't in
+  // the caseload (the Supabase version did this via the embedded eq).
+  const subs = allSubs.filter((s) => studentsById.has(s.student_id as string));
   if (subs.length === 0) return [];
 
   const submissionIds = subs.map((s) => s.id as number);
@@ -221,12 +244,7 @@ export async function listApprovalQueue(opts: {
   }
 
   return subs.map((s): ApprovalQueueItem => {
-    const stu = s.students as {
-      id: string;
-      last_name: string;
-      first_name: string;
-      grad_year: number;
-    };
+    const stu = studentsById.get(s.student_id as string)!;
     const hoursList = hoursBySub.get(s.id as number) ?? [];
     const hoursAgg = hoursList.length > 0 ? summarizeHours(hoursList) : null;
     const reflection = buildReflection({

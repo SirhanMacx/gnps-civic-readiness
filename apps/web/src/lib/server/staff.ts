@@ -1,26 +1,17 @@
 /**
  * Staff user management used by /admin/users.
  *
- * Phase 1 staff (counselors, SCRC committee, admins) authenticate via Supabase
- * magic links. The /users table mirrors the auth user by email; we treat the
- * `users.email` column as the join key (case-insensitive, normalized to
- * lowercase on insert).
+ * Phase 1 staff (counselors, SCRC committee, admins) authenticate via the
+ * self-hosted magic-link flow. The /users table is the source of truth;
+ * inviteStaff inserts the row, and the user signs in with /login from then
+ * on. We DO NOT auto-mail an invite link — the admin shares the portal URL
+ * directly and the staff member requests their own magic link.
  *
- * `inviteStaff` issues a Supabase magic-link invite via supabase.auth.admin
- * and inserts the staff row in one shot. If the email already exists in
+ * `inviteStaff` inserts the staff row. If the email already exists in
  * `users` the call fails fast (we don't silently re-invite).
  *
- * `removeStaff` is a soft delete: the row is kept (so audit history still
- * resolves the user's name) but the role flips to a sentinel `'decommissioned'`
- * value that fails the `requireRole` gate at the route layer. Because the
- * Postgres `user_role` enum doesn't include that value yet, we represent the
- * soft-delete by overwriting the email + adding a `deactivated_at` column we
- * mirror in the audit_log; the actual `role` enum value is left unchanged
- * but we set `caseload_filter.deactivated = true` and the route layer is
- * expected to treat any `users` row with that flag as logged-out.
- *
- * Until the schema gains a proper `deactivated_at` column, removeStaff opts
- * for option B: hard-delete the row. Documented inline in `removeStaff`.
+ * `removeStaff` hard-deletes the row. The audit_log row preserves the
+ * removed identity so historical references still resolve.
  */
 
 import { supabaseAdmin } from './supabase.js';
@@ -125,38 +116,16 @@ export async function inviteStaff(input: InviteStaffInput): Promise<InviteStaffR
     return { ok: false, error: `users insert failed: ${insErr?.message ?? 'unknown'}` };
   }
 
-  // Best-effort Supabase magic-link send. Available only when the service-role
-  // client has auth.admin (it does in production; the unit-test mock can omit).
-  let authWarning: string | undefined;
-  try {
-    // Some Supabase JS versions expose admin via .auth.admin; older or
-    // mocked clients may not. Guard with a typeof check.
-    const adminAuth = (sb as unknown as { auth?: { admin?: { inviteUserByEmail?: Function } } })
-      .auth?.admin?.inviteUserByEmail;
-    if (typeof adminAuth === 'function') {
-      const res = await adminAuth.call((sb as { auth: { admin: unknown } }).auth.admin, email);
-      const err =
-        (res && typeof res === 'object' && 'error' in res ? (res as { error: unknown }).error : null);
-      if (err && typeof err === 'object' && 'message' in err) {
-        authWarning = `magic-link send failed: ${(err as { message: string }).message}`;
-      }
-    } else {
-      authWarning = 'auth.admin.inviteUserByEmail unavailable in this environment';
-    }
-  } catch (e) {
-    authWarning = `magic-link send threw: ${e instanceof Error ? e.message : String(e)}`;
-  }
-
   await sb.from('audit_log').insert({
     actor_id: input.invitedBy,
     actor_kind: 'admin',
     action: 'admin_invited_staff',
     target_type: 'users',
     target_id: String(inserted.id),
-    data: { email, role: input.role, full_name: fullName, auth_warning: authWarning ?? null }
+    data: { email, role: input.role, full_name: fullName }
   });
 
-  return { ok: true, userId: String(inserted.id), error: authWarning };
+  return { ok: true, userId: String(inserted.id) };
 }
 
 export async function updateStaffRole(input: UpdateRoleInput): Promise<StaffRow> {

@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 import { verifyToken } from '$server/email.js';
-import { supabaseAdmin } from '$server/supabase.js';
+import { sql } from '$server/db.js';
 import { confirmHours, disputeHours } from '$server/confirmations.js';
 
 interface LoadResult {
@@ -19,19 +19,45 @@ export const load: PageServerLoad = async ({ params, url }): Promise<LoadResult>
   const uuid = verifyToken(params.token);
   if (!uuid) return { invalid: true };
 
-  const sb = supabaseAdmin();
-  // Embed the join via PostgREST nested-resource syntax. Returns an object on
-  // pathway_submissions because of inner-join semantics.
-  const { data: log, error } = await sb
-    .from('hours_log')
-    .select(
-      'id, hours, organization, activity_name, date_start, date_end, supervisor_name, confirmation_status, pathway_submissions!inner(student_id, students!inner(first_name, last_name))'
-    )
-    .eq('confirmation_token', uuid)
-    .maybeSingle();
+  // Two-table join (hours_log → pathway_submissions → students). The
+  // direct-Postgres facade doesn't model embedded joins, so we pull the
+  // joined columns via raw SQL.
+  type LogRow = {
+    id: number;
+    hours: number | string;
+    organization: string | null;
+    activity_name: string;
+    date_start: string;
+    date_end: string;
+    supervisor_name: string;
+    confirmation_status: string;
+    student_first_name: string;
+    student_last_name: string;
+  };
 
-  if (error) {
-    console.error('[confirm/load] fetch error:', error.message);
+  let log: LogRow | null = null;
+  try {
+    const rows = (await sql()<LogRow[]>`
+      select
+        hl.id,
+        hl.hours,
+        hl.organization,
+        hl.activity_name,
+        hl.date_start,
+        hl.date_end,
+        hl.supervisor_name,
+        hl.confirmation_status,
+        s.first_name as student_first_name,
+        s.last_name as student_last_name
+      from hours_log hl
+      inner join pathway_submissions ps on ps.id = hl.submission_id
+      inner join students s on s.id = ps.student_id
+      where hl.confirmation_token = ${uuid}::uuid
+      limit 1
+    `) as unknown as LogRow[];
+    log = rows[0] ?? null;
+  } catch (e) {
+    console.error('[confirm/load] fetch error:', e instanceof Error ? e.message : String(e));
     return { invalid: true };
   }
   if (!log) return { invalid: true };
@@ -41,21 +67,15 @@ export const load: PageServerLoad = async ({ params, url }): Promise<LoadResult>
   // disclosure can default to open via the page component.
   void url;
 
-  // Supabase types `pathway_submissions` as either a row or an array depending
-  // on FK config; cast loosely since we know the !inner join shape.
-  const ps = (log as unknown as {
-    pathway_submissions: { students: { first_name: string; last_name: string } };
-  }).pathway_submissions;
-
   return {
     invalid: false,
     alreadyConfirmed: log.confirmation_status === 'confirmed',
     alreadyDisputed: log.confirmation_status === 'disputed',
     hours: Number(log.hours),
-    organization: (log.organization ?? log.activity_name) as string,
+    organization: log.organization ?? log.activity_name,
     dateRange: `${log.date_start} to ${log.date_end}`,
-    studentName: `${ps.students.first_name} ${ps.students.last_name}`,
-    supervisorName: log.supervisor_name as string
+    studentName: `${log.student_first_name} ${log.student_last_name}`,
+    supervisorName: log.supervisor_name
   };
 };
 

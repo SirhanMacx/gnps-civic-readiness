@@ -7,24 +7,22 @@
  *
  * Graceful no-op when:
  *   - Student didn't provide an email
- *   - Resend is not configured (RESEND_API_KEY unset) — Phase 1 fallback
+ *   - SMTP is not configured (graceful degradation; admin can run without it)
  */
 
-import { Resend } from 'resend';
-import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import { supabaseAdmin } from './supabase.js';
+import { sql } from './db.js';
+import { sendEmail } from './email.js';
 import {
   computePoints,
   isEligible,
-  PATHWAYS,
   type PathwayId,
   type StudentEvidence,
   type AwardedSubmission
 } from '$lib/pathway-rules/index.js';
 
-const FROM = env.EMAIL_FROM ?? 'GNPS Civic Readiness <civicseal-gnps@resend.dev>';
-const APP_URL = publicEnv.PUBLIC_APP_URL ?? 'https://gnps-civic-readiness.vercel.app';
+const APP_URL = publicEnv.PUBLIC_APP_URL ?? 'http://localhost:5173';
 
 const PATHWAY_LABELS: Record<PathwayId, string> = {
   four_ss_credits: 'Four social-studies credits',
@@ -52,11 +50,19 @@ interface StudentProgress {
 async function buildProgress(studentId: string): Promise<StudentProgress | null> {
   const sb = supabaseAdmin();
 
-  const { data: enrollment } = await sb
-    .from('course_enrollment')
-    .select('credit_status, course_catalog!inner(counts_for, credits)')
-    .eq('student_id', studentId)
-    .eq('credit_status', 'passed');
+  // Course enrollments need a join into course_catalog — use raw SQL.
+  const enrollment = await sql()<
+    {
+      credit_status: string;
+      counts_for: string[] | null;
+      credits: number | string | null;
+    }[]
+  >`
+    select ce.credit_status, cc.counts_for, cc.credits
+    from course_enrollment ce
+    inner join course_catalog cc on cc.id = ce.course_id
+    where ce.student_id = ${studentId} and ce.credit_status = 'passed'
+  `;
 
   const { data: regents } = await sb
     .from('regents_scores')
@@ -71,10 +77,10 @@ async function buildProgress(studentId: string): Promise<StudentProgress | null>
 
   let ssCreditsPassed = 0;
   let advancedSsCount = 0;
-  for (const e of enrollment ?? []) {
-    const counts = ((e.course_catalog as unknown as { counts_for: string[]; credits: number })?.counts_for ?? []) as string[];
-    const cred = ((e.course_catalog as unknown as { counts_for: string[]; credits: number })?.credits ?? 1) as number;
-    if (counts.includes('1a')) ssCreditsPassed += Number(cred);
+  for (const e of enrollment) {
+    const counts = (e.counts_for ?? []) as string[];
+    const cred = Number(e.credits ?? 1);
+    if (counts.includes('1a')) ssCreditsPassed += cred;
     if (counts.includes('1d')) advancedSsCount++;
   }
 
@@ -225,12 +231,6 @@ export interface ProgressEmailResult {
 export async function sendStudentProgressEmail(input: ProgressEmailInput): Promise<ProgressEmailResult> {
   if (!input.studentEmail) return { ok: false, reason: 'no_email' };
 
-  const apiKey = env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn('[student-progress] Resend not configured; skipping progress report email.');
-    return { ok: false, reason: 'not_configured' };
-  }
-
   const progress = await buildProgress(input.studentId);
   if (!progress) return { ok: false, reason: 'no_data' };
 
@@ -241,17 +241,17 @@ export async function sendStudentProgressEmail(input: ProgressEmailInput): Promi
     justSubmittedPathway: input.justSubmittedPathway
   });
 
-  try {
-    const resend = new Resend(apiKey);
-    await resend.emails.send({
-      from: FROM,
-      to: input.studentEmail,
-      subject: `Your Seal of Civic Readiness progress — ${progress.total.toFixed(1)} / 6.0`,
-      html
-    });
-    return { ok: true };
-  } catch (e) {
-    console.error('[student-progress] send failed:', e);
+  const result = await sendEmail({
+    to: input.studentEmail,
+    subject: `Your Seal of Civic Readiness progress — ${progress.total.toFixed(1)} / 6.0`,
+    html
+  });
+  if (!result.ok) {
+    if (result.reason === 'not_configured') {
+      console.warn('[student-progress] SMTP not configured; skipping progress report email.');
+      return { ok: false, reason: 'not_configured' };
+    }
     return { ok: false, reason: 'send_failed' };
   }
+  return { ok: true };
 }

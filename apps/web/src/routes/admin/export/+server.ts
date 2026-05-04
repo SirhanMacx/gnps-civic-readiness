@@ -32,6 +32,7 @@ import {
 } from '$lib/nysed-export/index.js';
 import { loadCohort } from "$server/cohort.js";
 import { supabaseAdmin } from '$server/supabase.js';
+import { getStorage } from '$server/storage.js';
 import { requireRole } from '$server/auth.js';
 
 interface DbEvidenceRow {
@@ -106,16 +107,12 @@ export async function GET(event: RequestEvent): Promise<Response> {
         errors.push(`evidence_files query failed: ${efErr.message}`);
       }
       const evRows = ((rows ?? []) as DbEvidenceRow[]).filter((r) => r.storage_path);
+      const storage = getStorage();
       for (const r of evRows) {
         const studentId = submissionToStudent.get(r.submission_id);
         if (!studentId) continue;
         try {
-          const dl = await sb.storage.from('evidence').download(r.storage_path);
-          if (dl.error || !dl.data) {
-            errors.push(`download ${r.storage_path}: ${dl.error?.message ?? 'no data'}`);
-            continue;
-          }
-          const buf = await dl.data.arrayBuffer();
+          const bytes = await storage.download(r.storage_path);
           const list = evidenceByStudent.get(studentId) ?? [];
           const tags = (r.domain_tags ?? []).filter((t) => ALLOWED_DOMAINS.has(t));
           list.push({
@@ -123,7 +120,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
             mimeType: r.mime_type,
             sizeBytes: r.size_bytes,
             kind: r.kind,
-            bytes: new Uint8Array(buf),
+            bytes,
             domainTags: tags
           });
           evidenceByStudent.set(studentId, list);

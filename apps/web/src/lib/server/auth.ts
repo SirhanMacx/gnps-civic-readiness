@@ -1,89 +1,86 @@
 /**
- * Server-side magic-link auth helpers for the GNPS Civic Readiness Portal.
+ * Server-side auth helpers for the GNPS Civic Readiness Portal.
  *
- * - getSupabaseSsrClient(event): per-request Supabase client backed by the auth cookie
- *   (uses @supabase/ssr). This is the client to use for auth operations
- *   (signInWithOtp / exchangeCodeForSession / signOut / getUser).
- * - getCurrentUser(event): reads the session from cookies, joins to the staff `users`
- *   table by email, returns the StaffUser or null.
- * - requireRole(event, role): redirects to /login if anonymous; throws 403 if logged
- *   in with a different role. Used inside +layout.server.ts gates.
+ * Self-hosted JWT session cookie + staff lookup against `public.users`.
  *
- * The existing supabaseAdmin() (service-role) client should still be used for
- * privileged data access — see ./supabase.ts.
+ * - getCurrentUser(event):
+ *     Reads the session cookie, verifies the JWT, joins to the staff
+ *     `users` table by id (falling back to email when the id is missing),
+ *     returns a StaffUser or null. Anonymous requests resolve to null
+ *     without raising.
+ *
+ * - requireRole(event, role):
+ *     Same redirect/error semantics as before — anonymous → 303 to /login,
+ *     wrong role → 403, matching role → returns the user.
+ *
+ * - getServerUserByEmail(email):
+ *     Internal helper used by the magic-link callback to translate an email
+ *     into a `users` row before signing the JWT.
  */
 
-import { createServerClient } from '@supabase/ssr';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { error, redirect, type RequestEvent } from '@sveltejs/kit';
-import { env as privateEnv } from '$env/dynamic/private';
-import { env as publicEnv } from '$env/dynamic/public';
 import { supabaseAdmin } from './supabase.js';
+import { readSessionCookie, verifySession } from './session.js';
 import type { StaffRole, StaffUser } from '../../app.d.ts';
 
-const COOKIE_OPTIONS = {
-  path: '/',
-  httpOnly: true,
-  sameSite: 'lax' as const,
-  secure: true,
-  maxAge: 60 * 60 * 24 * 7 // 7 days
-};
-
-/**
- * Build a Supabase SSR client that reads/writes the auth cookie from the
- * SvelteKit RequestEvent. Anon key is fine — RLS + the auth cookie protect data.
- */
-export function getSupabaseSsrClient(event: RequestEvent): SupabaseClient {
-  const url = publicEnv.PUBLIC_SUPABASE_URL;
-  const anonKey = publicEnv.PUBLIC_SUPABASE_ANON_KEY ?? privateEnv.SUPABASE_ANON_KEY;
-  if (!url || !anonKey) {
-    throw new Error(
-      'Supabase env vars missing — set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY'
-    );
-  }
-  return createServerClient(url, anonKey, {
-    cookies: {
-      getAll: () =>
-        event.cookies.getAll().map(({ name, value }) => ({ name, value })),
-      setAll: (cookies) => {
-        for (const { name, value, options } of cookies) {
-          event.cookies.set(name, value, { ...COOKIE_OPTIONS, ...options, path: options?.path ?? '/' });
-        }
-      }
-    }
-  });
+interface UserRow {
+  id: string;
+  email: string;
+  role: StaffRole;
+  full_name: string | null;
 }
 
 /**
- * Read the currently logged-in user from the auth cookie, then join to the
- * staff `users` table by email. Returns null if not logged in or if the
- * email doesn't match a `users` row (unprovisioned).
- *
- * Uses the SSR client to verify the JWT, then the admin client to read the
- * staff users table (RLS-locked from anon).
+ * Look up a staff user by id. Returns null when the row is missing —
+ * e.g. an admin removed the row after the JWT was minted. The caller
+ * treats that as logged-out.
  */
-export async function getCurrentUser(event: RequestEvent): Promise<StaffUser | null> {
-  const supabase = event.locals.supabase ?? getSupabaseSsrClient(event);
-  const {
-    data: { user: authUser },
-    error: authErr
-  } = await supabase.auth.getUser();
-  if (authErr || !authUser?.email) return null;
-
-  const admin = supabaseAdmin();
-  const { data, error: dbErr } = await admin
+export async function getStaffUserById(id: string): Promise<StaffUser | null> {
+  const sb = supabaseAdmin();
+  const { data, error: dbErr } = await sb
     .from('users')
     .select('id, email, role, full_name')
-    .ilike('email', authUser.email)
+    .eq('id', id)
     .maybeSingle();
   if (dbErr || !data) return null;
+  return rowToStaff(data as unknown as UserRow);
+}
 
+/**
+ * Look up a staff user by email (case-insensitive). Used by the magic-link
+ * callback to bridge from the auth-tokens row to the `users` row.
+ */
+export async function getStaffUserByEmail(email: string): Promise<StaffUser | null> {
+  const sb = supabaseAdmin();
+  const { data, error: dbErr } = await sb
+    .from('users')
+    .select('id, email, role, full_name')
+    .ilike('email', email)
+    .maybeSingle();
+  if (dbErr || !data) return null;
+  return rowToStaff(data as unknown as UserRow);
+}
+
+function rowToStaff(row: UserRow): StaffUser {
   return {
-    id: data.id as string,
-    email: data.email as string,
-    role: data.role as StaffRole,
-    fullName: (data.full_name as string) ?? authUser.email
+    id: row.id,
+    email: row.email,
+    role: row.role,
+    fullName: row.full_name ?? row.email
   };
+}
+
+/**
+ * Read the currently logged-in user from the session cookie. Returns null
+ * when no cookie is present, the JWT is invalid/expired, or the user no
+ * longer exists in `public.users`.
+ */
+export async function getCurrentUser(event: RequestEvent): Promise<StaffUser | null> {
+  const jwt = readSessionCookie(event.cookies);
+  if (!jwt) return null;
+  const payload = await verifySession(jwt);
+  if (!payload) return null;
+  return getStaffUserById(payload.userId);
 }
 
 /**

@@ -4,9 +4,10 @@
  */
 
 import { redirect, type RequestHandler } from '@sveltejs/kit';
+import { clearSessionCookie } from '$server/session.js';
 
-const handler: RequestHandler = async ({ locals }) => {
-  await locals.supabase.auth.signOut();
+const handler: RequestHandler = async ({ cookies }) => {
+  clearSessionCookie(cookies);
   throw redirect(303, '/');
 };
 

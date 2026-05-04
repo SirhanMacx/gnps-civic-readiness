@@ -31,6 +31,7 @@ import {
   type RegentsScore,
   type StudentEvidence,
 } from '$lib/pathway-rules/index.js';
+import { sql } from './db.js';
 import { supabaseAdmin } from './supabase.js';
 
 export type RosterStatus =
@@ -161,19 +162,32 @@ export async function getCohortRoster(opts: {
   // 2) course_enrollment + course_catalog (only `passed` and `in_progress`
   //    are interesting for current credits; we pass them all through and let
   //    the rule engine ignore the rest).
-  const { data: enrollRaw, error: eEnr } = await sb
-    .from('course_enrollment')
-    .select(
-      'student_id, course_id, credit_status, course_catalog!inner(credits, counts_for)',
-    )
-    .in('student_id', studentIds);
-  if (eEnr) throw new Error(`course_enrollment.select failed: ${eEnr.message}`);
-  const enrollments: EnrollmentRow[] = (enrollRaw ?? []).map((row: any) => ({
+  // Raw SQL so we can inner-join — the db.ts facade doesn't model joins.
+  const enrollRaw = await sql()<
+    {
+      student_id: string;
+      course_id: number;
+      credit_status: 'passed' | 'failed' | 'in_progress';
+      credits: number | string | null;
+      counts_for: string[] | null;
+    }[]
+  >`
+    select
+      ce.student_id,
+      ce.course_id,
+      ce.credit_status,
+      cc.credits,
+      cc.counts_for
+    from course_enrollment ce
+    inner join course_catalog cc on cc.id = ce.course_id
+    where ce.student_id = any(${studentIds})
+  `;
+  const enrollments: EnrollmentRow[] = enrollRaw.map((row) => ({
     student_id: row.student_id,
     course_id: row.course_id,
     credit_status: row.credit_status,
-    catalog_credits: Number(row.course_catalog?.credits ?? 0),
-    catalog_counts_for: (row.course_catalog?.counts_for ?? []) as string[],
+    catalog_credits: Number(row.credits ?? 0),
+    catalog_counts_for: (row.counts_for ?? []) as string[],
   }));
 
   // 3) regents_scores

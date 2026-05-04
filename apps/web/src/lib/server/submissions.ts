@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { supabaseAdmin } from './supabase.js';
+import { getStorage } from './storage.js';
 
 export const ServiceSubmissionSchema = z.object({
   studentId: z.string().min(3).max(40),
@@ -299,24 +300,19 @@ export async function createCivicElectiveEssay(input: CivicElectiveEssay): Promi
     .single();
   if (e1 || !sub) throw new Error(`pathway_submissions.insert failed: ${e1?.message ?? 'unknown'} (code=${e1?.code ?? 'n/a'})`);
 
-  // Try to upload to the 'evidence' Storage bucket. If the bucket is missing
-  // (dev environments may not have it) we still keep the submission row and
-  // surface a soft warning.
+  // Try to write the file to the configured storage backend (filesystem in
+  // single-server deployments, S3-compatible if STORAGE_BACKEND=s3). If the
+  // upload fails we still keep the submission row and surface a soft warning
+  // — counselor review can re-run the upload.
   let storagePath: string | null = null;
   let storageWarning: string | undefined;
-  const path = `civic_elective/${data.studentId}/${sub.id}-${data.fileName.replace(/[^A-Za-z0-9._-]/g, '_')}`;
+  const safeName = data.fileName.replace(/[^A-Za-z0-9._-]/g, '_');
+  const path = `civic_elective/${data.studentId}/${sub.id}-${safeName}`;
   try {
-    const { error: upErr } = await sb.storage
-      .from('evidence')
-      .upload(path, data.fileBytes, { contentType: data.fileMimeType, upsert: false });
-    if (upErr) {
-      storageWarning = `evidence storage upload failed: ${upErr.message}`;
-      console.warn(storageWarning);
-    } else {
-      storagePath = path;
-    }
+    const stored = await getStorage().upload(path, data.fileBytes, data.fileMimeType);
+    storagePath = stored.storagePath;
   } catch (e) {
-    storageWarning = `evidence storage threw: ${e instanceof Error ? e.message : String(e)}`;
+    storageWarning = `evidence storage upload threw: ${e instanceof Error ? e.message : String(e)}`;
     console.warn(storageWarning);
   }
 

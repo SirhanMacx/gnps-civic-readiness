@@ -13,6 +13,7 @@
 
 import { computePoints, isEligible, type PointTotals } from '$lib/pathway-rules/index.js';
 import { buildStudentEvidence } from './roster.js';
+import { sql } from './db.js';
 import { supabaseAdmin } from './supabase.js';
 
 export interface StudentRecord {
@@ -105,21 +106,42 @@ export async function getStudentDetail(studentId: string): Promise<StudentDetail
   if (!stu) return null;
 
   // 2) Course enrollment + course_catalog
-  const { data: enrRaw, error: eEnr } = await sb
-    .from('course_enrollment')
-    .select(
-      'student_id, course_id, school_year, term, final_grade, credit_status, ' +
-      'course_catalog!inner(course_code, title, credits, counts_for)',
-    )
-    .eq('student_id', studentId);
-  if (eEnr) throw new Error(`course_enrollment.select failed: ${eEnr.message}`);
-  const enrollment: EnrollmentRow[] = (enrRaw ?? []).map((r: any) => ({
-    courseCode: r.course_catalog?.course_code ?? '',
-    title: r.course_catalog?.title ?? '',
+  // Direct-Postgres facade doesn't support embedded joins; use raw SQL so
+  // we can pull catalog columns alongside the enrollment row in one query.
+  const enrRaw = await sql()<
+    {
+      student_id: string;
+      course_id: number;
+      school_year: string;
+      final_grade: number | null;
+      credit_status: string;
+      course_code: string | null;
+      title: string | null;
+      credits: number | string | null;
+      counts_for: string[] | null;
+    }[]
+  >`
+    select
+      ce.student_id,
+      ce.course_id,
+      ce.school_year,
+      ce.final_grade,
+      ce.credit_status,
+      cc.course_code,
+      cc.title,
+      cc.credits,
+      cc.counts_for
+    from course_enrollment ce
+    inner join course_catalog cc on cc.id = ce.course_id
+    where ce.student_id = ${studentId}
+  `;
+  const enrollment: EnrollmentRow[] = enrRaw.map((r) => ({
+    courseCode: r.course_code ?? '',
+    title: r.title ?? '',
     schoolYear: r.school_year,
     finalGrade: r.final_grade,
     creditStatus: r.credit_status,
-    countsFor: (r.course_catalog?.counts_for ?? []) as string[],
+    countsFor: (r.counts_for ?? []) as string[],
   }));
 
   // 3) Regents scores
@@ -190,12 +212,12 @@ export async function getStudentDetail(studentId: string): Promise<StudentDetail
 
   // 5) Compute totals using the pathway-rules engine.
   const evidence = buildStudentEvidence({
-    enrollments: (enrRaw ?? []).map((r: any) => ({
+    enrollments: enrRaw.map((r) => ({
       student_id: studentId,
       course_id: r.course_id,
-      credit_status: r.credit_status,
-      catalog_credits: Number(r.course_catalog?.credits ?? 0),
-      catalog_counts_for: (r.course_catalog?.counts_for ?? []) as string[],
+      credit_status: r.credit_status as 'passed' | 'failed' | 'in_progress',
+      catalog_credits: Number(r.credits ?? 0),
+      catalog_counts_for: (r.counts_for ?? []) as string[],
     })),
     regents: regents.map((r) => ({
       student_id: studentId,
@@ -214,32 +236,46 @@ export async function getStudentDetail(studentId: string): Promise<StudentDetail
   const totals = computePoints(evidence);
 
   // 6) Audit log — pull last 20 entries either targeting the student directly,
-  //    or targeting one of their pathway_submissions rows.
+  //    or targeting one of their pathway_submissions rows. The OR-of-AND
+  //    predicate doesn't fit the simple builder; use raw SQL.
   const submissionIds = subs.map((s) => String(s.id));
-  let logQuery = sb
-    .from('audit_log')
-    .select('id, occurred_at, actor_kind, action, target_type, target_id, data')
-    .order('occurred_at', { ascending: false })
-    .limit(20);
-
-  if (submissionIds.length > 0) {
-    // Either student directly OR a submission row owned by them.
-    logQuery = logQuery.or(
-      `and(target_type.eq.students,target_id.eq.${studentId}),` +
-        `and(target_type.eq.pathway_submissions,target_id.in.(${submissionIds.join(',')}))`,
-    );
-  } else {
-    logQuery = logQuery
-      .eq('target_type', 'students')
-      .eq('target_id', studentId);
-  }
-
-  const { data: auditRaw, error: eLog } = await logQuery;
-  if (eLog) {
+  type AuditDbRow = {
+    id: number;
+    occurred_at: string;
+    actor_kind: string;
+    action: string;
+    target_type: string | null;
+    target_id: string | null;
+    data: unknown;
+  };
+  let auditRaw: AuditDbRow[] = [];
+  try {
+    if (submissionIds.length > 0) {
+      auditRaw = (await sql()<AuditDbRow[]>`
+        select id, occurred_at, actor_kind, action, target_type, target_id, data
+        from audit_log
+        where (target_type = 'students' and target_id = ${studentId})
+           or (target_type = 'pathway_submissions' and target_id = ANY(${submissionIds}))
+        order by occurred_at desc
+        limit 20
+      `) as unknown as AuditDbRow[];
+    } else {
+      auditRaw = (await sql()<AuditDbRow[]>`
+        select id, occurred_at, actor_kind, action, target_type, target_id, data
+        from audit_log
+        where target_type = 'students' and target_id = ${studentId}
+        order by occurred_at desc
+        limit 20
+      `) as unknown as AuditDbRow[];
+    }
+  } catch (e) {
     // Audit log query failures shouldn't 500 the whole detail page.
-    console.warn(`[getStudentDetail] audit_log query failed: ${eLog.message}`);
+    console.warn(
+      `[getStudentDetail] audit_log query failed: ${e instanceof Error ? e.message : String(e)}`
+    );
+    auditRaw = [];
   }
-  const auditLog: AuditLogRow[] = (auditRaw ?? []).map((r: any) => ({
+  const auditLog: AuditLogRow[] = auditRaw.map((r) => ({
     id: r.id,
     occurredAt: r.occurred_at,
     actorKind: r.actor_kind,

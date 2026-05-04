@@ -1,19 +1,36 @@
 /**
- * Unit tests for the magic-link auth helpers in src/lib/server/auth.ts.
+ * Unit tests for the self-hosted auth helpers.
  *
- * We test requireRole's authorization branches by mocking the SvelteKit
- * RequestEvent (locals + cookies + url) and the Supabase admin client used
- * by getCurrentUser. We don't spin up a real Supabase project — these are
- * pure logic tests around the gate.
+ * Covers:
+ *   - issueAuthToken / consumeAuthToken roundtrip + tamper / expiry rejection
+ *   - signSession / verifySession roundtrip + tamper rejection
+ *   - requireRole authorization branches (anon → 303, wrong role → 403,
+ *     match → returns user)
+ *
+ * The Postgres facade and the `sql` tagged-template client are mocked so we
+ * never hit a real DB. JWT signing uses the real `jose` library against an
+ * in-test SESSION_SECRET.
  */
 
-import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 
-// Mock the supabase admin module before importing auth.ts (vitest hoists vi.mock).
-const adminBuilderState: { result: { data: any; error: any } } = {
-  result: { data: null, error: null }
-};
+// ---------------------------------------------------------------------------
+// In-memory fakes for the DB facade and the raw sql() client
+// ---------------------------------------------------------------------------
+
+interface AdminBuilderState {
+  result: { data: unknown; error: unknown };
+}
+const adminBuilderState: AdminBuilderState = { result: { data: null, error: null } };
+
+interface AuthTokenRow {
+  email: string;
+  token_hash: string;
+  expires_at: number; // ms-since-epoch for easy fake-timers checks
+  consumed_at: number | null;
+}
+const fakeAuthTokens: AuthTokenRow[] = [];
 
 vi.mock('$server/supabase.js', () => ({
   supabaseAdmin: () => ({
@@ -21,35 +38,152 @@ vi.mock('$server/supabase.js', () => ({
       select: () => ({
         ilike: () => ({
           maybeSingle: async () => adminBuilderState.result
+        }),
+        eq: () => ({
+          maybeSingle: async () => adminBuilderState.result
         })
       })
     })
   })
 }));
 
-// Mock $env modules — they aren't available outside the SvelteKit dev server.
+// Stub the postgres client used by auth-tokens.ts. The auth-tokens helpers
+// invoke `sql()\`insert ...\`` and `sql()\`with consumed as (update ...)
+// returning email\``; we intercept by sniffing the SQL text and acting on
+// the in-memory `fakeAuthTokens` array.
+vi.mock('$server/db.js', () => {
+  function makeTaggedTemplate() {
+    return (template: TemplateStringsArray, ...values: unknown[]) => {
+      const text = template.join('?').toLowerCase();
+      // INSERT path (issueAuthToken).
+      if (text.includes('insert into auth_tokens')) {
+        const [email, tokenHash, expiresIso] = values as [string, string, string];
+        fakeAuthTokens.push({
+          email,
+          token_hash: tokenHash,
+          expires_at: new Date(expiresIso).getTime(),
+          consumed_at: null
+        });
+        return Promise.resolve([] as unknown[]);
+      }
+      // CONSUME path (consumeAuthToken) — single-row CTE update.
+      if (text.includes('update auth_tokens') && text.includes('returning email')) {
+        const tokenHash = values[0] as string;
+        const now = Date.now();
+        const row = fakeAuthTokens.find(
+          (r) => r.token_hash === tokenHash && r.consumed_at === null && r.expires_at > now
+        );
+        if (!row) return Promise.resolve([] as { email: string }[]);
+        row.consumed_at = now;
+        return Promise.resolve([{ email: row.email }] as { email: string }[]);
+      }
+      // No-op for anything else this test exercises.
+      return Promise.resolve([] as unknown[]);
+    };
+  }
+  const tag = makeTaggedTemplate();
+  return {
+    sql: () => tag,
+    db: { from: () => ({ select: () => ({}) }) }
+  };
+});
+
+// $env modules — the real ones live in SvelteKit's runtime.
 vi.mock('$env/dynamic/private', () => ({
-  env: { SUPABASE_SERVICE_ROLE_KEY: 'srk-test', SUPABASE_ANON_KEY: 'anon-test' }
-}));
-vi.mock('$env/dynamic/public', () => ({
   env: {
-    PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
-    PUBLIC_SUPABASE_ANON_KEY: 'anon-test',
-    PUBLIC_APP_URL: 'http://localhost:5173'
+    SESSION_SECRET: 'test-secret-bytes-must-be-long-enough-for-hs256',
+    DATABASE_URL: 'postgres://test',
+    NODE_ENV: 'test'
   }
 }));
-
-// Mock @supabase/ssr so getSupabaseSsrClient can be called without a real network.
-vi.mock('@supabase/ssr', () => ({
-  createServerClient: () => ({
-    auth: {
-      getUser: async () => ({ data: { user: null }, error: null })
-    }
-  })
+vi.mock('$env/dynamic/public', () => ({
+  env: { PUBLIC_APP_URL: 'http://localhost:5173' }
 }));
 
-// Import AFTER mocks are wired.
+// Imports AFTER mocks.
+const { issueAuthToken, consumeAuthToken } = await import('../src/lib/server/auth-tokens.js');
+const { signSession, verifySession } = await import('../src/lib/server/session.js');
 const { requireRole, getCurrentUser } = await import('../src/lib/server/auth.js');
+
+// ---------------------------------------------------------------------------
+// Tests: auth-tokens
+// ---------------------------------------------------------------------------
+
+describe('issueAuthToken / consumeAuthToken', () => {
+  beforeEach(() => {
+    fakeAuthTokens.length = 0;
+  });
+
+  it('round-trips a token: issue → consume returns the original email', async () => {
+    const { token } = await issueAuthToken('alice@greatneck.k12.ny.us');
+    expect(token).toMatch(/^[0-9a-f]{64}$/);
+    expect(fakeAuthTokens).toHaveLength(1);
+    expect(fakeAuthTokens[0]?.token_hash).not.toBe(token); // stored as hash, not raw
+    const email = await consumeAuthToken(token);
+    expect(email).toBe('alice@greatneck.k12.ny.us');
+  });
+
+  it('returns null for an unknown token', async () => {
+    const email = await consumeAuthToken('deadbeef'.repeat(8));
+    expect(email).toBeNull();
+  });
+
+  it('rejects a token after it has been consumed (single-use)', async () => {
+    const { token } = await issueAuthToken('bob@greatneck.k12.ny.us');
+    expect(await consumeAuthToken(token)).toBe('bob@greatneck.k12.ny.us');
+    expect(await consumeAuthToken(token)).toBeNull();
+  });
+
+  it('rejects an expired token', async () => {
+    const { token } = await issueAuthToken('carol@greatneck.k12.ny.us');
+    // Simulate expiry by rewinding the row.
+    fakeAuthTokens[0]!.expires_at = Date.now() - 1000;
+    expect(await consumeAuthToken(token)).toBeNull();
+  });
+
+  it('rejects empty / non-string tokens', async () => {
+    expect(await consumeAuthToken('')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: session JWT
+// ---------------------------------------------------------------------------
+
+describe('signSession / verifySession', () => {
+  it('round-trips userId/email/role', async () => {
+    const jwt = await signSession({
+      userId: '00000000-0000-0000-0000-000000000001',
+      email: 'a@greatneck.k12.ny.us',
+      role: 'counselor'
+    });
+    const payload = await verifySession(jwt);
+    expect(payload?.userId).toBe('00000000-0000-0000-0000-000000000001');
+    expect(payload?.email).toBe('a@greatneck.k12.ny.us');
+    expect(payload?.role).toBe('counselor');
+  });
+
+  it('rejects a tampered JWT', async () => {
+    const jwt = await signSession({
+      userId: '00000000-0000-0000-0000-000000000002',
+      email: 'b@greatneck.k12.ny.us',
+      role: 'admin'
+    });
+    const flipped = jwt.slice(0, -2) + (jwt.slice(-2) === 'aa' ? 'bb' : 'aa');
+    expect(await verifySession(flipped)).toBeNull();
+  });
+
+  it('rejects null/empty inputs without throwing', async () => {
+    expect(await verifySession(null)).toBeNull();
+    expect(await verifySession(undefined)).toBeNull();
+    expect(await verifySession('')).toBeNull();
+    expect(await verifySession('not-a-jwt')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: requireRole (gate)
+// ---------------------------------------------------------------------------
 
 interface MockUser {
   id: string;
@@ -59,15 +193,8 @@ interface MockUser {
 }
 
 function fakeEvent(user: MockUser | null, pathname = '/counselor'): RequestEvent {
-  // Minimum-viable fake — only the fields auth.ts reads. The supabase stub
-  // mirrors what hooks.server.ts attaches in production.
-  const supabaseStub = {
-    auth: {
-      getUser: async () => ({ data: { user: null }, error: null })
-    }
-  };
   return {
-    locals: { user, supabase: supabaseStub as any },
+    locals: { user },
     url: new URL(`http://localhost${pathname}`),
     cookies: {
       getAll: () => [],
@@ -75,7 +202,7 @@ function fakeEvent(user: MockUser | null, pathname = '/counselor'): RequestEvent
       set: () => {},
       delete: () => {},
       serialize: () => ''
-    } as any
+    } as never
   } as unknown as RequestEvent;
 }
 
@@ -117,10 +244,11 @@ describe('requireRole', () => {
     try {
       await requireRole(fakeEvent(null, '/admin/import?cohort=2027'), 'admin');
       throw new Error('should have thrown a redirect');
-    } catch (e: any) {
-      expect(e.status).toBe(303);
-      expect(e.location).toContain('next=');
-      expect(e.location).toContain(encodeURIComponent('/admin/import'));
+    } catch (e: unknown) {
+      const r = e as { status: number; location: string };
+      expect(r.status).toBe(303);
+      expect(r.location).toContain('next=');
+      expect(r.location).toContain(encodeURIComponent('/admin/import'));
     }
   });
 
@@ -166,10 +294,8 @@ describe('getCurrentUser', () => {
     adminBuilderState.result = { data: null, error: null };
   });
 
-  it('returns null when there is no auth session', async () => {
-    // The default @supabase/ssr mock returns user=null. So no DB lookup either.
-    const event = fakeEvent(null);
-    const result = await getCurrentUser(event);
+  it('returns null when there is no session cookie', async () => {
+    const result = await getCurrentUser(fakeEvent(null));
     expect(result).toBeNull();
   });
 });
