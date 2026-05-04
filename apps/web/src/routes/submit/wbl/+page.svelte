@@ -3,21 +3,17 @@
   export let form: ActionData;
 </script>
 
-<svelte:head><title>Service-Learning Hours — GNPS Civic Readiness</title></svelte:head>
+<svelte:head><title>WBL / Extra-curricular Hours — GNPS Civic Readiness</title></svelte:head>
 
 <a href="/submit" class="text-sm text-primary hover:underline">← All pathways</a>
-<h1 class="font-display text-3xl text-primary mt-2 mb-1">Service-Learning Hours</h1>
-<p class="text-sm text-muted mb-6">Pathway 2b · 1 point per 25 hours · 5-stage process · reflection required to earn the point</p>
+<h1 class="font-display text-3xl text-primary mt-2 mb-1">Extra-curricular / Work-Based Learning Hours</h1>
+<p class="text-sm text-muted mb-6">Pathway 2e · 40+ hours required for 0.5 point · application-of-knowledge essay required at threshold</p>
 
 {#if form?.success}
   <div class="bg-green-50 border-l-4 border-green-600 p-5 rounded mb-6 max-w-2xl">
     <p class="font-display font-semibold text-green-900 text-lg mb-1">Hours submitted</p>
-    {#if form.emailSent}
-      <p class="text-sm text-green-900">We've emailed <strong>{form.supervisorEmail}</strong> a confirmation link. Once they click confirm, your hours count toward the 25-hour threshold.</p>
-    {:else}
-      <p class="text-sm text-green-900">Your hours have been recorded. <strong>Note:</strong> automatic supervisor email is not yet configured — a counselor will follow up with <strong>{form.supervisorEmail}</strong> directly.</p>
-    {/if}
-    <p class="text-sm text-green-900 mt-2">You'll add a reflection essay once you reach 25 hours total.</p>
+    <p class="text-sm text-green-900">We've emailed <strong>{form.supervisorEmail}</strong> a confirmation link. Once they confirm, your <strong>{form.hours}</strong> hour(s) count toward the 40-hour Pathway 2e threshold.</p>
+    <p class="text-sm text-green-900 mt-2">When you reach 40 hours, you'll add a short application-of-knowledge essay before the 0.5 point is awarded.</p>
     <a href="/submit" class="inline-block mt-3 text-sm text-green-900 underline">Submit more evidence →</a>
   </div>
 {:else}
@@ -52,12 +48,18 @@
     </fieldset>
 
     <fieldset class="border border-border rounded-lg p-5">
-      <legend class="px-2 text-xs uppercase tracking-widest font-display font-semibold text-primary">Service activity</legend>
+      <legend class="px-2 text-xs uppercase tracking-widest font-display font-semibold text-primary">Activity</legend>
       <div class="space-y-4">
-        <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Activity / organization</span>
-          <input name="activityName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Long Island Cares — food bank" />
-        </label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label class="block">
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Activity / role</span>
+            <input name="activityName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Model UN secretariat · Robotics build team · Summer internship" />
+          </label>
+          <label class="block">
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Organization</span>
+            <input name="organization" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="GNS · Stony Brook ASE Lab · Town of North Hempstead" />
+          </label>
+        </div>
         <div class="grid grid-cols-2 gap-4">
           <label class="block">
             <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — start</span>
@@ -67,22 +69,15 @@
             <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — end</span>
             <input name="dateEnd" type="date" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
-          <label class="block">
+          <label class="block col-span-2">
             <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Hours this submission</span>
-            <input name="hours" type="number" step="0.5" min="0.5" max="200" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="8" />
-          </label>
-          <label class="block">
-            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Service type (NYSED-defined)</span>
-            <select name="serviceType" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-white">
-              <option value="direct">Direct — face-to-face with people you serve</option>
-              <option value="indirect">Indirect — meets a need without direct contact</option>
-              <option value="advocacy">Advocacy — educating others about an issue</option>
-            </select>
+            <input name="hours" type="number" step="0.5" min="0.5" max="500" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="6" />
+            <span class="text-xs text-muted mt-1 block">Submit individual blocks of hours over time. The 40-hour threshold for Pathway 2e accumulates across all confirmed submissions.</span>
           </label>
         </div>
         <label class="block">
-          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Brief description (1–3 sentences)</span>
-          <textarea name="description" rows="2" maxlength="500" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Sorted donations, restocked shelves, staffed mobile pantry distribution at Westbury location…"></textarea>
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Description (1–2 short paragraphs)</span>
+          <textarea name="description" rows="5" minlength="20" maxlength="1500" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Describe what you did, the responsibilities you held, and what civic-readiness skills, knowledge, or mindsets you developed."></textarea>
         </label>
       </div>
     </fieldset>
@@ -93,15 +88,15 @@
       <div class="space-y-3">
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor name</span>
-          <input name="supervisorName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="J. Patel" />
+          <input name="supervisorName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Coach R. Rivera" />
         </label>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor email</span>
-          <input name="supervisorEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="jpatel@licares.org" />
+          <input name="supervisorEmail" type="email" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="rrivera@greatneck.k12.ny.us" />
         </label>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Supervisor's organization (optional)</span>
-          <input name="supervisorOrg" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Long Island Cares Inc." />
+          <input name="supervisorOrg" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="GNS Athletics · Town clerk's office" />
         </label>
       </div>
     </fieldset>

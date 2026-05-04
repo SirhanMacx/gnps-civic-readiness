@@ -6,11 +6,11 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
   {#each [
     { href: '/submit/service', label: 'Service-Learning Hours', sub: 'Pathway 2b · 25+ hrs · 1 pt · reflection required', live: true },
-    { href: '/submit/wbl', label: 'Extra-curricular / Work-Based Learning', sub: 'Pathway 2e · 40+ hrs · 0.5 pt · application essay', live: false },
-    { href: '/submit/civic-project', label: 'High School Civic Project', sub: 'Pathway 2a · 1.5 pt · max 2× · SCRC pre-approves topic', live: false },
-    { href: '/submit/research', label: 'Research Project', sub: 'Pathway 1e · 1 pt · SCRC pre-approves topic', live: false },
-    { href: '/submit/capstone', label: 'Civics Capstone Project', sub: 'Pathway 2f · 4 pts · SCRC pre-approves topic & scores work', live: false },
-    { href: '/submit/civic-elective', label: 'Civic-Engagement Elective Essay', sub: 'Pathway 2c · 0.5 pt · paired with course-grade proficiency', live: false },
+    { href: '/submit/wbl', label: 'Extra-curricular / Work-Based Learning', sub: 'Pathway 2e · 40+ hrs · 0.5 pt · application essay', live: true },
+    { href: '/submit/civic-project', label: 'High School Civic Project', sub: 'Pathway 2a · 1.5 pt · max 2× · SCRC pre-approves topic', live: true },
+    { href: '/submit/research', label: 'Research Project', sub: 'Pathway 1e · 1 pt · SCRC pre-approves topic', live: true },
+    { href: '/submit/capstone', label: 'Civics Capstone Project', sub: 'Pathway 2f · 4 pts · SCRC pre-approves topic & scores work', live: true },
+    { href: '/submit/civic-elective', label: 'Civic-Engagement Elective Essay', sub: 'Pathway 2c · 0.5 pt · paired with course-grade proficiency', live: true },
   ] as p}
     {#if p.live}
       <a href={p.href} class="block border border-border rounded-lg p-5 hover:border-primary hover:shadow-md transition group">
