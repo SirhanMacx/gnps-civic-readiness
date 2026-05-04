@@ -13,12 +13,14 @@
     "prebuild": "node -e \"const fs=require('fs');const p='../../scripts/sync-vendored.mjs';if(fs.existsSync(p)){require('child_process').execSync('node '+p,{cwd:'../..',stdio:'inherit'})}else{console.log('vendored sync skipped (running outside monorepo, e.g. Vercel)')}\""
   },
   "devDependencies": {
+    "@sveltejs/adapter-node": "^5.5.4",
     "@sveltejs/adapter-vercel": "^5.5.2",
     "@sveltejs/kit": "^2.8.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tailwindcss/forms": "^0.5.9",
     "@testing-library/svelte": "^5.2.0",
     "@types/node": "^25.6.0",
+    "@types/nodemailer": "^8.0.0",
     "@types/papaparse": "^5.3.15",
     "autoprefixer": "^10.4.20",
     "jsdom": "^25.0.0",
@@ -34,8 +36,11 @@
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.45.4",
     "fflate": "^0.8.2",
+    "jose": "^6.2.3",
+    "nodemailer": "^8.0.7",
     "papaparse": "^5.4.1",
     "pdf-lib": "^1.17.1",
+    "postgres": "^3.4.9",
     "resend": "^4.0.1",
     "zod": "^3.23.8"
   }
