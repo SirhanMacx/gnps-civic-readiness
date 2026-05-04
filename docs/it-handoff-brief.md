@@ -2,11 +2,14 @@
 
 **For:** Great Neck Public Schools Technology Department
 **From:** Social Studies Department
-**Re:** NYS Seal of Civic Readiness tracking portal — integration asks
-**Date:** May 4, 2026
+**Re:** NYS Seal of Civic Readiness tracking portal — deployment + integration
+**Date:** May 4, 2026 · Release v0.2.0 (fully self-hostable)
 
-**Live demo:** https://gnps-civic-readiness.vercel.app
 **Source code (MIT):** https://github.com/SirhanMacx/gnps-civic-readiness
+**Latest release:** https://github.com/SirhanMacx/gnps-civic-readiness/releases/tag/v0.2.0
+**Full IT runbook:** [docs/it-runbook.md](https://github.com/SirhanMacx/gnps-civic-readiness/blob/main/docs/it-runbook.md) — 1,300+ lines covering deploy, ops, backups, DR, security, troubleshooting
+**Infinite Campus integration:** [docs/infinite-campus-integration.md](https://github.com/SirhanMacx/gnps-civic-readiness/blob/main/docs/infinite-campus-integration.md) — three integration paths, the exact IC Ad Hoc Reporting recipe, FERPA considerations
+**Teacher Quick-Push UI:** [docs/teacher-quick-push.md](https://github.com/SirhanMacx/gnps-civic-readiness/blob/main/docs/teacher-quick-push.md) — bulk-award civic-readiness points to a class roster in one action
 
 ---
 
@@ -14,9 +17,11 @@
 
 An open-source web portal for tracking the New York State Seal of Civic Readiness — the +1 Diploma Pathway distinction approved by the NYS Board of Regents in 2021. The portal collects civic-knowledge data (auto-pulled from Infinite Campus where possible) and civic-participation evidence (service hours, projects, capstones submitted by students with supervisor and counselor verification). At year-end it produces a NYSED-compliant audit pack and a roster CSV for the transcript office.
 
-**Phase 1 has zero IT dependency.** The application ships on free-tier SaaS (Vercel + Supabase + Resend), runs at $0/mo, and gives Social Studies a working URL within ~4 weeks of development start.
+**As of v0.2.0, the system is fully self-hostable on GNPS infrastructure.** Zero third-party SaaS dependencies. Any Linux box with Docker can run the entire stack — application, database, email, file storage, SSL termination — via `docker compose up`. Student records never leave the district.
 
-The items below are required only to **promote from Phase 1 (staff pilot) to Phase 2 (full launch with student-facing portal, district SSO, and live Infinite Campus integration).** They are listed in the order they typically need to be addressed.
+Phase 1.5 (self-host) is the recommended deployment path for production. Phase 2 (live Infinite Campus integration) builds on top of Phase 1.5 once IT has the deploy stable.
+
+The items below are what IT needs to provide / configure to take the system live.
 
 ---
 
@@ -24,44 +29,56 @@ The items below are required only to **promote from Phase 1 (staff pilot) to Pha
 
 | # | Ask | Effort | Owner |
 |---|---|---|---|
-| 1 | NYSED district application (Application Business Portal) — gates *awarding* of seals on transcripts | ~30 days state review | Curriculum & Instruction (not IT) |
-| 2 | Domain CNAME — point `civicseal.greatneck.k12.ny.us` (or chosen subdomain) to Vercel | ~5 minutes | Network/DNS |
-| 3 | FERPA / privacy review of the Phase 1 architecture (Supabase US-East, encrypted at rest + in transit, role-based access, full audit log); sign Supabase DPA if district policy requires | ~1–2 hours | Privacy/Compliance + IT |
-| 4 | SSO integration — choose ClassLink / Google Workspace / Azure AD; configurable in Supabase Auth providers (no application code change) | ~1 day | Identity Management |
-| 5 | Infinite Campus integration — read access to roster, course enrollment, Regents scores. Either OneRoster API or nightly CSV/SFTP export works | ~2–4 hours scoping; setup varies | SIS Administrator |
-| 6 | Email reputation — supervisor confirmations send from `civicseal@greatneck.k12.ny.us`. Either use district SMTP creds, or keep Resend and add SPF/DKIM records to GNPS DNS for the subdomain | ~30 minutes | Email Administrator |
-| 7 | Website integration — choose one of: (A) **subdomain CNAME** [recommended], (B) iframe embed in Finalsite page, (C) reverse proxy via Finalsite or Cloudflare | A: 5 min · B: 30 min · C: ½ day | Web team |
-| 8 | Long-term hosting decision — keep free-tier Vercel + Supabase under a district-paid account (handles GNPS scale for years), or self-host the same code on GNPS infrastructure. No code changes either way | District policy decision | IT Leadership |
+| 1 | NYSED district application (SED Application Business Portal) — gates *awarding* of seals on transcripts | ~30 days state review | Curriculum & Instruction (not IT) |
+| 2 | Provision a Linux VM (Ubuntu 22.04 / Debian 12 / Rocky 9 — district preference). 2 vCPU + 4 GB RAM + 50 GB disk. Public IP on ports 80/443. Outbound internet access. | ~30 min | Infrastructure |
+| 3 | DNS A record for `civicseal.greatneck.k12.ny.us` pointing at the VM's public IP. Caddy auto-issues a Let's Encrypt cert on first boot. | ~5 min | Network/DNS |
+| 4 | SMTP credentials for the district mail server. Recommend creating a dedicated mailbox `civicseal-portal@greatneck.k12.ny.us` with auth to send as `civicseal@greatneck.k12.ny.us`. | ~1 hour | Email Administrator |
+| 5 | FERPA / privacy review. **Self-hosted v0.2.0 keeps all student data on district infrastructure** — no third-party data processor. Encryption at rest via the VM's disk encryption (LUKS / cloud KMS). Audit log captures every state transition. | ~1 hour | Privacy/Compliance |
+| 6 | Deploy: `git clone` → `cp .env.example .env` (fill in 7 values) → `make up`. Caddy obtains SSL automatically. Migrations apply automatically. ~10 minutes from clone to live URL. | ~10 min once Steps 2–4 are done | IT (one engineer) |
+| 7 | First admin: `make admin EMAIL=jon@greatneck.k12.ny.us` provisions the bootstrap admin. They log in via magic link and invite the rest of staff via the admin UI. | ~5 min | IT |
+| 8 | Infinite Campus integration. Phase 1.5 supports manual quarterly CSV uploads (works today). Phase 2 wires the live SFTP / OneRoster path. See [docs/infinite-campus-integration.md](https://github.com/SirhanMacx/gnps-civic-readiness/blob/main/docs/infinite-campus-integration.md) for the IC Ad Hoc Reporting recipe + 8 specific vendor questions. | Phase 1.5: ~30 min/quarter; Phase 2: 1–2 weeks of integration work | SIS Administrator |
+| 9 | Backups: nightly cron script ships `pg_dump` + evidence-data tarball off-host. Sample script in [docs/it-runbook.md §6](https://github.com/SirhanMacx/gnps-civic-readiness/blob/main/docs/it-runbook.md#6-backups--disaster-recovery). | ~30 min | IT |
+| 10 | Updates: `git pull` + `make up` rebuilds + restarts (~30s outage). Schedule outside school hours. Schema migrations are idempotent. | per release | IT |
 
 ---
 
-## Architecture summary (Phase 2 target)
+## Architecture summary (v0.2.0 self-hosted, on GNPS infrastructure)
 
 ```
-                      ┌─────────────────────────────────┐
-   Students ─────▶    │  civicseal.greatneck.k12.ny.us  │
-   Counselors ───▶    │     (Vercel · SvelteKit app)    │
-   SCRC ─────────▶    └────────┬────────────────────────┘
-                               │
-                       ┌───────┴──────────────────────────┐
-                       │                                  │
-                       ▼                                  ▼
-              ┌──────────────────┐             ┌──────────────────┐
-              │  Supabase        │             │  GNPS Identity   │
-              │  Postgres + Auth │             │  Provider (SSO)  │
-              │  (FERPA-DPA'd)   │             │  ClassLink/      │
-              └────┬─────────────┘             │  Google/Azure    │
-                   │                           └──────────────────┘
-                   │ nightly sync
+                      Internet
+                         │
+                         ▼  (HTTPS — Let's Encrypt cert auto-renewed)
+            ┌────────────────────────────┐
+            │  Caddy (port 443)          │
+            │  reverse proxy + SSL term  │
+            └──────────────┬─────────────┘
+                           │ http://app:3000  (internal Docker network)
+                           ▼
+            ┌────────────────────────────┐
+            │  SvelteKit app (Node 22)   │   the application
+            └──────┬─────────────┬───────┘
+                   │             │
+                   │             └─▶ /app/evidence-data  (Docker volume)
+                   │                  uploaded student artifacts
                    ▼
-          ┌──────────────────────┐
-          │  Infinite Campus     │
-          │  (OneRoster API or   │
-          │   SFTP CSV export)   │
-          └──────────────────────┘
+            ┌────────────────────────────┐
+            │  Postgres 16               │   single relational store
+            │  (Docker volume)           │   students, submissions, hours,
+            └────────────────────────────┘   evidence_files, course_catalog,
+                                             course_enrollment, regents_scores,
+                                             users, audit_log, auth_tokens
 
-Email out: Resend → SPF/DKIM-aligned to greatneck.k12.ny.us
+Outbound:
+  └─▶ District SMTP server (port 587 STARTTLS) — supervisor confirmations,
+      student progress reports, staff magic-link sign-in
+
+GNPS-hosted Linux VM, single host:
+  ~1 GB RAM total · 1 vCPU steady-state · ~1 GB disk growth/year
 ```
+
+**Trust boundary:** everything inside the Docker network is private. Only Caddy is on the public interface. Postgres + the app are not internet-reachable.
+
+**Phase 2 enhancement (deferred):** swap self-hosted magic-link auth for district SSO (ClassLink / Google Workspace / Azure AD); add live Infinite Campus integration to replace quarterly CSV uploads. Code already supports both paths; only requires district IT decisions on identity provider + IC vendor coordination.
 
 ---
 
