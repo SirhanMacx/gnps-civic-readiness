@@ -10,21 +10,21 @@ importers:
 
   apps/web:
     dependencies:
-      '@gnps-civic/nysed-export':
-        specifier: workspace:*
-        version: link:../../packages/nysed-export
-      '@gnps-civic/pathway-rules':
-        specifier: workspace:*
-        version: link:../../packages/pathway-rules
       '@supabase/ssr':
         specifier: ^0.10.2
         version: 0.10.2(@supabase/supabase-js@2.105.3)
       '@supabase/supabase-js':
         specifier: ^2.45.4
         version: 2.105.3
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.2
       papaparse:
         specifier: ^5.4.1
         version: 5.5.3
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
       resend:
         specifier: ^4.0.1
         version: 4.8.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
