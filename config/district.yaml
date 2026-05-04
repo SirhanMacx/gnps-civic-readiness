@@ -1,0 +1,73 @@
+# District-specific config. Edit this file and re-deploy to re-skin the portal
+# without touching application source. See docs/customization.md.
+
+district_name: "Great Neck Public Schools"
+district_short_name: "GNPS"
+district_url: "https://www.greatneck.k12.ny.us/"
+support_email: "civicseal@greatneck.k12.ny.us"
+
+# GNPS round logo (served from district CDN). Replace with your district's logo URL.
+logo_url: "https://resources.finalsite.net/images/f_auto,q_auto,t_image_size_2/v1719848341/greatneckk12nyus/mapstlq0ll8etgbkht69/NewGNPSLogoRound.png"
+
+colors:
+  # Brand colors extracted from greatneck.k12.ny.us. Replace with your hex values.
+  primary: "#204A97"      # Royal navy — used in header bar, primary text accents
+  secondary: "#FE8158"    # Warm coral — used for primary CTAs, accent stripes
+
+fonts:
+  # Must be available on Google Fonts (or your own CDN configured in app.html).
+  display: "Outfit"
+  body: "Roboto"
+  serif: "Literata"
+
+# Senior class graduation year. The portal will tag new students with this
+# unless overridden in the form. Update annually.
+graduation_class_seed: 2027
+
+# Civic-engagement-eligible courses. Each entry seeds a row in course_catalog.
+# `counts_for` values: 1a (4 SS credits), 1d (advanced SS), 2c (civic-engagement elective).
+# Update with your district's actual social-studies catalog.
+course_catalog_seed:
+  - course_code: SS_GLOBAL_I
+    title: "Global History & Geography I"
+    counts_for: ["1a"]
+    credits: 1.0
+  - course_code: SS_GLOBAL_II
+    title: "Global History & Geography II"
+    counts_for: ["1a"]
+    credits: 1.0
+  - course_code: SS_US_HISTORY
+    title: "United States History & Government"
+    counts_for: ["1a"]
+    credits: 1.0
+  - course_code: SS_PIG_ECON
+    title: "Participation in Government & Economics"
+    counts_for: ["1a"]
+    credits: 1.0
+  - course_code: AP_US_GOV
+    title: "AP US Government & Politics"
+    counts_for: ["1d", "2c"]
+    credits: 1.0
+  - course_code: AP_WORLD_HISTORY
+    title: "AP World History"
+    counts_for: ["1d"]
+    credits: 1.0
+  - course_code: AP_HUMAN_GEO
+    title: "AP Human Geography"
+    counts_for: ["1d", "2c"]
+    credits: 1.0
+  - course_code: AP_ECON_MACRO
+    title: "AP Macroeconomics"
+    counts_for: ["1d"]
+    credits: 1.0
+
+# Email addresses of Civic Readiness Committee members. These are seeded
+# as `users` rows with role='scrc_member' on first deploy. Add/remove
+# as committee membership changes; subsequent users invite via the admin UI.
+scrc_committee:
+  - "civicseal@greatneck.k12.ny.us"   # placeholder — replace with real members
+
+# Initial admin user. This account can invite other staff via the admin UI.
+initial_admin:
+  - email: "civicseal@greatneck.k12.ny.us"
+    full_name: "Civic Readiness Admin"
