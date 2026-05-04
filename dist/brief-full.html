@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GNPS Civic Readiness Portal — IT Handoff Brief</title>
+<link rel="stylesheet" href="gnps-spec.css">
+<style>
+@page { margin: 0.65in 0.6in 0.75in 0.6in; }
+@page :first { margin: 0; }
+.content-body h1:first-of-type { display: none; }
+.content-body { padding: 0; }
+.content-body h2 { font-size: 13pt; margin-top: 18pt; }
+.content-body table { font-size: 8.5pt; }
+.content-body th, .content-body td { padding: 4pt 6pt; }
+</style>
+</head>
+<body>
+<div class="cover-page" style="min-height:5in;height:auto;padding:0.75in 0.75in 0.5in 0.75in;page-break-after:auto">
+  <div class="logo-area" style="margin-bottom:0.6in">
+    <img src="https://resources.finalsite.net/images/f_auto,q_auto,t_image_size_2/v1719848341/greatneckk12nyus/mapstlq0ll8etgbkht69/NewGNPSLogoRound.png" alt="GNPS" style="width:50px;height:50px">
+    <div>
+      <div class="district-name" style="font-size:14pt">Great Neck Public Schools</div>
+      <div class="district-sub" style="font-size:9pt">Social Studies Department · IT Handoff Brief</div>
+    </div>
+  </div>
+  <h1 class="cover-title" style="font-size:26pt;margin-bottom:0.18in">Civic Readiness Portal —<br>Technology Department Brief</h1>
+  <div class="cover-sub" style="font-size:11pt;max-width:6in;margin-bottom:0">Eight integration items required to promote from staff pilot to full launch. None are needed before pilot.</div>
+</div>
+<div class="content-body">
+<h1 id="gnps-civic-readiness-portal-it-handoff-brief">GNPS Civic
+Readiness Portal — IT Handoff Brief</h1>
+<p><strong>For:</strong> Great Neck Public Schools Technology Department
+<strong>From:</strong> Social Studies Department <strong>Re:</strong>
+NYS Seal of Civic Readiness tracking portal — integration asks
+<strong>Date:</strong> May 4, 2026</p>
+<hr />
+<h2 id="what-this-is">What this is</h2>
+<p>An open-source web portal for tracking the New York State Seal of
+Civic Readiness — the +1 Diploma Pathway distinction approved by the NYS
+Board of Regents in 2021. The portal collects civic-knowledge data
+(auto-pulled from Infinite Campus where possible) and
+civic-participation evidence (service hours, projects, capstones
+submitted by students with supervisor and counselor verification). At
+year-end it produces a NYSED-compliant audit pack and a roster CSV for
+the transcript office.</p>
+<p><strong>Phase 1 has zero IT dependency.</strong> The application
+ships on free-tier SaaS (Vercel + Supabase + Resend), runs at $0/mo, and
+gives Social Studies a working URL within ~4 weeks of development
+start.</p>
+<p>The items below are required only to <strong>promote from Phase 1
+(staff pilot) to Phase 2 (full launch with student-facing portal,
+district SSO, and live Infinite Campus integration).</strong> They are
+listed in the order they typically need to be addressed.</p>
+<hr />
+<h2 id="what-were-asking-of-gnps-technology">What we’re asking of GNPS
+Technology</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Ask</th>
+<th>Effort</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>NYSED district application (Application Business Portal) — gates
+<em>awarding</em> of seals on transcripts</td>
+<td>~30 days state review</td>
+<td>Curriculum &amp; Instruction (not IT)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Domain CNAME — point <code>civicseal.greatneck.k12.ny.us</code> (or
+chosen subdomain) to Vercel</td>
+<td>~5 minutes</td>
+<td>Network/DNS</td>
+</tr>
+<tr>
+<td>3</td>
+<td>FERPA / privacy review of the Phase 1 architecture (Supabase
+US-East, encrypted at rest + in transit, role-based access, full audit
+log); sign Supabase DPA if district policy requires</td>
+<td>~1–2 hours</td>
+<td>Privacy/Compliance + IT</td>
+</tr>
+<tr>
+<td>4</td>
+<td>SSO integration — choose ClassLink / Google Workspace / Azure AD;
+configurable in Supabase Auth providers (no application code
+change)</td>
+<td>~1 day</td>
+<td>Identity Management</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Infinite Campus integration — read access to roster, course
+enrollment, Regents scores. Either OneRoster API or nightly CSV/SFTP
+export works</td>
+<td>~2–4 hours scoping; setup varies</td>
+<td>SIS Administrator</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Email reputation — supervisor confirmations send from
+<code>civicseal@greatneck.k12.ny.us</code>. Either use district SMTP
+creds, or keep Resend and add SPF/DKIM records to GNPS DNS for the
+subdomain</td>
+<td>~30 minutes</td>
+<td>Email Administrator</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Website integration — choose one of: (A) <strong>subdomain
+CNAME</strong> [recommended], (B) iframe embed in Finalsite page, (C)
+reverse proxy via Finalsite or Cloudflare</td>
+<td>A: 5 min · B: 30 min · C: ½ day</td>
+<td>Web team</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Long-term hosting decision — keep free-tier Vercel + Supabase under
+a district-paid account (handles GNPS scale for years), or self-host the
+same code on GNPS infrastructure. No code changes either way</td>
+<td>District policy decision</td>
+<td>IT Leadership</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="architecture-summary-phase-2-target">Architecture summary (Phase
+2 target)</h2>
+<pre><code>                      ┌─────────────────────────────────┐
+   Students ─────▶    │  civicseal.greatneck.k12.ny.us  │
+   Counselors ───▶    │     (Vercel · SvelteKit app)    │
+   SCRC ─────────▶    └────────┬────────────────────────┘
+                               │
+                       ┌───────┴──────────────────────────┐
+                       │                                  │
+                       ▼                                  ▼
+              ┌──────────────────┐             ┌──────────────────┐
+              │  Supabase        │             │  GNPS Identity   │
+              │  Postgres + Auth │             │  Provider (SSO)  │
+              │  (FERPA-DPA&#39;d)   │             │  ClassLink/      │
+              └────┬─────────────┘             │  Google/Azure    │
+                   │                           └──────────────────┘
+                   │ nightly sync
+                   ▼
+          ┌──────────────────────┐
+          │  Infinite Campus     │
+          │  (OneRoster API or   │
+          │   SFTP CSV export)   │
+          └──────────────────────┘
+
+Email out: Resend → SPF/DKIM-aligned to greatneck.k12.ny.us</code></pre>
+<hr />
+<h2 id="cost-trajectory">Cost trajectory</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Vercel</th>
+<th>Supabase</th>
+<th>Resend</th>
+<th><strong>Total</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1 (free tiers)</td>
+<td>$0</td>
+<td>$0</td>
+<td>$0</td>
+<td><strong>$0/mo</strong></td>
+</tr>
+<tr>
+<td>Phase 2 (typical at GNPS scale)</td>
+<td>$0</td>
+<td>$0–25</td>
+<td>$0</td>
+<td><strong>$0–25/mo</strong></td>
+</tr>
+<tr>
+<td>Self-hosted alternative</td>
+<td>GNPS infrastructure + ops time</td>
+<td>Same</td>
+<td>District SMTP or Resend</td>
+<td>District-internal cost</td>
+</tr>
+</tbody>
+</table>
+<p>GNPS scale (~6,800 students; ~412 per graduating class) fits
+comfortably within all three free tiers for years. Supabase Pro at
+$25/mo only becomes relevant if the district wants daily backups beyond
+the free-tier point-in-time recovery, or if the database exceeds 500 MB
+(unlikely until ~year 5 at GNPS scale).</p>
+<hr />
+<h2 id="what-we-are-not-asking">What we are NOT asking</h2>
+<ul>
+<li><strong>No new infrastructure procurement.</strong> Phase 1 doesn’t
+touch GNPS infra.</li>
+<li><strong>No vendor contracts to negotiate.</strong> All Phase 1
+services are usable on free tiers under district-owned accounts or under
+existing personal accounts during pilot.</li>
+<li><strong>No proprietary lock-in.</strong> Codebase is MIT-licensed
+and portable. If the district later decides to self-host, that path is
+supported with no application code changes.</li>
+<li><strong>No student data leaves the United States.</strong> Supabase
+US-East region is the only data-residency point.</li>
+<li><strong>No CMS migration.</strong> Finalsite stays as-is.
+Integration option A (recommended) is just a DNS CNAME alongside
+existing Finalsite hosting.</li>
+</ul>
+<hr />
+<h2 id="why-this-benefits-gnps">Why this benefits GNPS</h2>
+<ol type="1">
+<li><strong>Closes a competitive gap.</strong> Peer Long Island
+districts (Seaford, 3 Village, Connetquot) already publish Seal of Civic
+Readiness pages. GNPS has no program; this fixes that on a fast
+timeline.</li>
+<li><strong>Better than peer implementations.</strong> Peer districts
+use Microsoft / Google Forms feeding counselor inboxes — no central
+tracker, manual roll-up, end-of-year crunch. The proposed system gives
+counselors a live roster and produces NYSED audit packs
+automatically.</li>
+<li><strong>Open-source positioning.</strong> Repo is MIT-licensed and
+forkable. Other NYS districts can adopt the GNPS implementation rather
+than building their own — a leadership artifact for Curriculum &amp;
+Instruction and the Board.</li>
+<li><strong>Phased risk.</strong> Phase 1 is reversible. If the system
+doesn’t deliver value in pilot, IT involvement never escalates. If it
+does, Phase 2 promotion is well-scoped.</li>
+</ol>
+<hr />
+<h2 id="repository-contact">Repository &amp; contact</h2>
+<ul>
+<li><strong>GitHub:</strong>
+<code>github.com/&lt;author&gt;/civic-readiness-portal</code> (private
+during development; public on launch approval; transferable to
+GNPS-owned org)</li>
+<li><strong>License:</strong> MIT</li>
+<li><strong>Contact:</strong> Jon — Social Studies Department, Great
+Neck Public Schools</li>
+</ul>
+<p>The full design document (architecture, data model, user flows, NYSED
+compliance mapping, repository structure, risks) is available as a
+27-page companion PDF/DOCX.</p>
+</div></body></html>

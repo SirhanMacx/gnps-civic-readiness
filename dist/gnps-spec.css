@@ -1,0 +1,262 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Literata:opsz,wght@7..72,400;7..72,500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@page {
+  size: letter;
+  margin: 0.85in 0.75in 0.95in 0.75in;
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-family: 'Roboto', sans-serif;
+    font-size: 9pt;
+    color: #888;
+  }
+  @bottom-left {
+    content: "GNPS Civic Readiness Portal — Design Document";
+    font-family: 'Roboto', sans-serif;
+    font-size: 9pt;
+    color: #888;
+  }
+}
+
+@page :first {
+  margin: 0;
+  @bottom-left { content: none; }
+  @bottom-right { content: none; }
+}
+
+* { box-sizing: border-box; }
+
+html { font-size: 11pt; }
+
+body {
+  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color: #1a1a1a;
+  line-height: 1.55;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* --- COVER PAGE (first .cover-page block) --- */
+.cover-page {
+  page-break-after: always;
+  height: 100vh;
+  min-height: 9.5in;
+  background: linear-gradient(160deg, #204A97 0%, #1a3d80 65%, #FE8158 165%);
+  color: #fff;
+  padding: 1in 0.85in;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.cover-page .logo-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 1.6in;
+}
+.cover-page .logo-area img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #fff;
+  padding: 4px;
+}
+.cover-page .logo-area .district-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 18pt;
+  letter-spacing: 0.02em;
+}
+.cover-page .logo-area .district-sub {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  font-size: 11pt;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+.cover-page h1.cover-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 36pt;
+  line-height: 1.05;
+  margin: 0 0 0.4in 0;
+  color: #fff;
+  border: 0;
+  padding: 0;
+}
+.cover-page .cover-sub {
+  font-family: 'Literata', serif;
+  font-weight: 400;
+  font-size: 14pt;
+  line-height: 1.5;
+  max-width: 5.5in;
+  opacity: 0.95;
+}
+.cover-page .cover-meta {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(255,255,255,0.3);
+  font-family: 'Roboto', sans-serif;
+  font-size: 10pt;
+}
+.cover-page .cover-meta .label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 8.5pt;
+  opacity: 0.7;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* --- HEADINGS --- */
+h1 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 22pt;
+  color: #204A97;
+  margin: 36pt 0 8pt 0;
+  border-bottom: 3px solid #204A97;
+  padding-bottom: 6pt;
+  page-break-after: avoid;
+}
+h1:first-of-type { margin-top: 0; }
+
+h2 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 16pt;
+  color: #204A97;
+  margin: 28pt 0 8pt 0;
+  page-break-after: avoid;
+}
+
+h3 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 13pt;
+  color: #204A97;
+  margin: 18pt 0 6pt 0;
+  page-break-after: avoid;
+}
+
+h4 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 11pt;
+  color: #1a1a1a;
+  margin: 12pt 0 4pt 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  page-break-after: avoid;
+}
+
+p {
+  margin: 0 0 8pt 0;
+  orphans: 3;
+  widows: 3;
+}
+
+a {
+  color: #204A97;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(32,74,151,0.4);
+}
+
+strong { color: #1a1a1a; font-weight: 600; }
+em { color: #444; }
+
+/* --- LISTS --- */
+ul, ol { margin: 6pt 0 10pt 0; padding-left: 22pt; }
+li { margin-bottom: 3pt; line-height: 1.5; }
+
+/* --- TABLES --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8pt 0 14pt 0;
+  font-size: 9.5pt;
+  page-break-inside: avoid;
+}
+th {
+  background: #204A97;
+  color: #fff;
+  padding: 7pt 9pt;
+  text-align: left;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid #204A97;
+}
+td {
+  padding: 6pt 9pt;
+  border: 1px solid #d4d8e0;
+  vertical-align: top;
+  line-height: 1.45;
+}
+tr:nth-child(even) td { background: #f7f9fc; }
+
+/* --- CODE BLOCKS --- */
+pre, code {
+  font-family: 'JetBrains Mono', 'Menlo', monospace;
+  font-size: 8.5pt;
+}
+code {
+  background: #f0f3f8;
+  color: #204A97;
+  padding: 1pt 5pt;
+  border-radius: 3px;
+  border: 1px solid #d4d8e0;
+}
+pre {
+  background: #fafbfc;
+  border: 1px solid #d4d8e0;
+  border-left: 3px solid #204A97;
+  padding: 10pt 12pt;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  page-break-inside: avoid;
+  margin: 8pt 0 12pt 0;
+}
+pre code {
+  background: transparent;
+  border: 0;
+  color: #2d2d2d;
+  padding: 0;
+  font-size: 8.5pt;
+}
+
+/* --- BLOCKQUOTES --- */
+blockquote {
+  border-left: 3px solid #FE8158;
+  background: #fff5f0;
+  padding: 9pt 14pt;
+  margin: 10pt 0;
+  font-family: 'Literata', Georgia, serif;
+  font-size: 10pt;
+  color: #4a2c1a;
+  font-style: normal;
+  page-break-inside: avoid;
+}
+blockquote p { margin: 0 0 6pt 0; }
+blockquote p:last-child { margin: 0; }
+
+/* --- HORIZONTAL RULE --- */
+hr {
+  border: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #204A97 0%, #FE8158 100%);
+  margin: 24pt 0;
+}
+
+/* --- TOC --- */
+.toc-list { list-style: none; padding-left: 0; }
+.toc-list li { margin-bottom: 5pt; font-family: 'Roboto', sans-serif; }

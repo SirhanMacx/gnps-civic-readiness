@@ -1,0 +1,1305 @@
+<h1 id="gnps-civic-readiness-portal-design-document">GNPS Civic
+Readiness Portal — Design Document</h1>
+<p><strong>Project:</strong> Open-source web application for tracking
+the New York State Seal of Civic Readiness at Great Neck Public Schools
+<strong>Version:</strong> 1.0 — Design Phase <strong>Date:</strong> May
+4, 2026 <strong>Status:</strong> Design approved by Social Studies
+Department; awaiting C&amp;I and Technology Department review</p>
+<hr />
+<h2 id="executive-summary">Executive summary</h2>
+<p>The New York State Seal of Civic Readiness (“the Seal”) is a
+state-recognized distinction added to a student’s high school transcript
+and diploma. Earning it requires a documented portfolio of civic
+knowledge (course credits, Regents performance, research) and civic
+participation (service-learning, projects, capstones) accumulated across
+grades 9–12 — six points minimum, with at least two points in each
+column.</p>
+<p>Great Neck Public Schools currently has no infrastructure to track
+these requirements. Peer Long Island districts (Seaford, Connetquot, 3
+Village) have launched programs but rely on Microsoft or Google Forms
+feeding counselor inboxes — there is no central tracker, no live
+progress view for students or families, and end-of-year roll-up is a
+manual aggregation burden.</p>
+<p>This document specifies an <strong>open-source web portal</strong>,
+MIT-licensed, that:</p>
+<ol type="1">
+<li><strong>Auto-populates</strong> civic knowledge data (course
+enrollment, Regents scores) from Infinite Campus exports</li>
+<li><strong>Collects</strong> civic participation evidence through a
+public landing page with a structured submission flow</li>
+<li><strong>Routes</strong> evidence through verifiable approval
+workflows: supervisor-email confirmations for hours, faculty review for
+reflections, Seal of Civic Readiness Committee (SCRC) review for
+projects</li>
+<li><strong>Surfaces</strong> a live roster dashboard for Social Studies
+department staff and counselors, with eligibility calculations against
+the NYSED rubric</li>
+<li><strong>Exports</strong> a NYSED-compliant audit pack at year-end
+(per-student PDFs + roster CSV) for transcript office and possible state
+audit</li>
+</ol>
+<p>The system ships in two phases:</p>
+<ul>
+<li><strong>Phase 1</strong> (~4 weeks of development) runs entirely on
+free SaaS (Vercel + Supabase + Resend) at $0/mo, requires zero GNPS
+infrastructure, and delivers a working public URL that staff can pilot
+immediately.</li>
+<li><strong>Phase 2</strong> (after IT integration) adds Single Sign-On
+for students, a student-facing progress portal, and a live Infinite
+Campus data feed — reusing the same codebase and database schema.</li>
+</ul>
+<p>The repository is published on GitHub under MIT license so other Long
+Island and New York State districts can fork the implementation. This
+positions Great Neck as the originator of an open civic-readiness
+standard rather than a single-district consumer.</p>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-background">Background</a></li>
+<li><a href="#2-design-principles--constraints">Design principles &amp;
+constraints</a></li>
+<li><a href="#3-system-architecture">System architecture</a></li>
+<li><a href="#4-data-model">Data model</a></li>
+<li><a href="#5-user-roles--flows">User roles &amp; flows</a></li>
+<li><a href="#6-nysed-compliance-mapping">NYSED compliance
+mapping</a></li>
+<li><a href="#7-phase-1--phase-2-roadmap">Phase 1 → Phase 2
+roadmap</a></li>
+<li><a href="#8-it-handoff-brief">IT-handoff brief</a></li>
+<li><a href="#9-open-source-repository-structure">Open-source repository
+structure</a></li>
+<li><a href="#10-gnps-website-integration-options">GNPS website
+integration options</a></li>
+<li><a href="#11-cost-analysis">Cost analysis</a></li>
+<li><a href="#12-risks--mitigations">Risks &amp; mitigations</a></li>
+<li><a href="#13-appendices">Appendices</a></li>
+</ol>
+<hr />
+<h2 id="background">1. Background</h2>
+<h3 id="what-is-the-nys-seal-of-civic-readiness">1.1 What is the NYS
+Seal of Civic Readiness?</h3>
+<p>The Seal of Civic Readiness, established by the NYS Board of Regents
+in September 2021 as an approved +1 Diploma Pathway, formally recognizes
+students who have demonstrated civic knowledge, civic skills, civic
+mindsets, and civic experiences. The Seal appears as a distinction on a
+student’s transcript and diploma.</p>
+<p>To earn the Seal, a student must complete all standard NYS diploma
+requirements <strong>and</strong> earn six points across two columns of
+pathway options, with a minimum of two points in each column.</p>
+<p><strong>Source:</strong> New York State Seal of Civic Readiness
+Handbook, Updated 2024 (NYSED, Office of Standards and Instruction); the
+Criteria document at
+https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness.</p>
+<p>The Seal does <strong>not</strong> have a “with Distinction” tier
+(that is a feature of the Seal of Biliteracy, distinct from this
+seal).</p>
+<h3 id="nysed-pathway-reference">1.2 NYSED pathway reference</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Pathway</th>
+<th>Points</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1a</td>
+<td>4 credits of social studies (Global I/II, US History, Participation
+in Government)</td>
+<td>1</td>
+<td>Required for graduation; auto-counts</td>
+</tr>
+<tr>
+<td>1b</td>
+<td>Mastery (≥85) on Global II or US History Regents</td>
+<td>1.5</td>
+<td>Repeatable — both exams count separately</td>
+</tr>
+<tr>
+<td>1c</td>
+<td>Proficiency (65–84) on Global II or US History Regents</td>
+<td>1</td>
+<td>Repeatable; safety-net scores honored per IEP/504</td>
+</tr>
+<tr>
+<td>1d</td>
+<td>Advanced SS course (Honors / Pre-AP / AP / IB /
+dual-enrollment)</td>
+<td>0.5</td>
+<td>Repeatable; SCRC approves which courses qualify</td>
+</tr>
+<tr>
+<td>1e</td>
+<td>Civic-knowledge research project</td>
+<td>1</td>
+<td>SCRC pre-approves topic; rubric in NYSED Appendix F</td>
+</tr>
+<tr>
+<td>2a</td>
+<td>High School Civic Project</td>
+<td>1.5</td>
+<td>Maximum 2 instances → 3-point cap; SCRC approves; rubric in Appendix
+G</td>
+</tr>
+<tr>
+<td>2b</td>
+<td>Service-learning (≥25 hrs + reflection)</td>
+<td>1</td>
+<td>Repeatable; 5-stage process; reflection is gating element</td>
+</tr>
+<tr>
+<td>2c</td>
+<td>Civic-engagement elective (proficiency + application essay)</td>
+<td>0.5</td>
+<td>Repeatable; SCRC maintains course list</td>
+</tr>
+<tr>
+<td>2d</td>
+<td>Middle school capstone (grades 7–8 only)</td>
+<td>1</td>
+<td>Back-entered at HS intake with MS teacher signoff</td>
+</tr>
+<tr>
+<td>2e</td>
+<td>Extra-curricular or work-based learning (≥40 hrs + essay)</td>
+<td>0.5</td>
+<td>Repeatable; may accumulate over 4 years</td>
+</tr>
+<tr>
+<td>2f</td>
+<td>High School Civics Capstone Project</td>
+<td><strong>4</strong></td>
+<td>Single largest pathway; 4 essential elements; SCRC scores against
+Appendix P</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Pathway letters disagree between NYSED documents.</strong>
+The single-page Criteria PDF and the full Handbook use slightly
+different letter labels for the participation pathways (e.g., MS
+Capstone is “2d” in one and “2e” in the other). To avoid ambiguity,
+<strong>the system keys pathways by name
+(<code>pathway_ms_capstone</code>, <code>pathway_hs_capstone</code>,
+etc.) rather than letter.</strong></p>
+</blockquote>
+<h3 id="current-state-at-great-neck">1.3 Current state at Great
+Neck</h3>
+<p>Great Neck Public Schools currently has no Seal of Civic Readiness
+program — no application to NYSED, no roster, no submission
+infrastructure. The Social Studies department has identified launching
+the program as a priority and is using this design to scope what would
+need to be built.</p>
+<h3 id="peer-district-analysis">1.4 Peer-district analysis</h3>
+<p>Three Long Island districts with active Seal programs were reviewed
+to understand prevailing practice:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>District</th>
+<th>Approach</th>
+<th>Submission method</th>
+<th>Tracking</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Seaford HS</strong></td>
+<td>Microsoft Forms — “Reflection Worksheet” + separate elective form;
+counselors collect by May 1 deadline. Three paper forms (Hours Report,
+Verification, Reflection). 27-course civic-elective list published.</td>
+<td>Public form, no auth</td>
+<td>Manual roll-up by guidance counselors</td>
+</tr>
+<tr>
+<td><strong>3 Village CSD</strong></td>
+<td>Google Site landing page; submissions routed through Director of
+Social Studies. Mechanism not publicly documented.</td>
+<td>Department-driven</td>
+<td>Department-internal</td>
+</tr>
+<tr>
+<td><strong>Connetquot CSD</strong></td>
+<td>Page exists under Social Studies department; submission details
+linked but not enumerated on public site.</td>
+<td>Same pattern as above</td>
+<td>Same</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The common gap:</strong> none of these districts has a
+central student-record system tracking SoCR progress in real time.
+Course/Regents data is re-keyed from the SIS into forms, end-of-year
+roll-up consumes counselor hours during peak season, and there is no
+live progress view for students or families. This is precisely what GNPS
+can leapfrog by building right.</p>
+<hr />
+<h2 id="design-principles-constraints">2. Design principles &amp;
+constraints</h2>
+<h3 id="principles">2.1 Principles</h3>
+<ol type="1">
+<li><strong>Ship a usable URL fast.</strong> A working application
+drives the IT and leadership conversations; a proposal does not.</li>
+<li><strong>Phase the integration risk away.</strong> Phase 1 has zero
+IT dependency. IT involvement is gated to a Phase 2 promotion, after the
+system has proven its value.</li>
+<li><strong>Be NYSED-defensible by default.</strong> Every awarded point
+traces to verifiable evidence + an audit log. The system can produce the
+audit pack NYSED would request without manual work.</li>
+<li><strong>Open-source from day one.</strong> Other districts can fork.
+Vendors cannot rent-seek the GNPS implementation.</li>
+<li><strong>Brand-match the GNPS website.</strong> The portal feels like
+an extension of greatneck.k12.ny.us, not a third-party tool.</li>
+</ol>
+<h3 id="constraints">2.2 Constraints</h3>
+<ul>
+<li><strong>No student-facing login in Phase 1.</strong> Avoids the SSO
+integration cliff that stalls peer-district projects in IT review.</li>
+<li><strong>Multi-year tracking from day one.</strong> Seal evidence
+accumulates from 9th grade onward; senior-year-only collection (the
+peer-district default) loses two thirds of the evidence.</li>
+<li><strong>Two-tier verification.</strong> Hours need supervisor email
+confirmation; reflections/artifacts need staff review; course/Regents
+data is auto-counted from the SIS import. Workload is allocated to where
+fraud risk actually lives.</li>
+<li><strong>District must apply to NYSED before awarding seals.</strong>
+This is a Curriculum &amp; Instruction action, not an IT action, but the
+system cannot confer seals on transcripts until GNPS is on the
+NYSED-approved school list.</li>
+</ul>
+<hr />
+<h2 id="system-architecture">3. System architecture</h2>
+<h3 id="phase-1-architecture-ship-now">3.1 Phase 1 architecture (ship
+now)</h3>
+<pre><code>Browser ──── HTTPS ────▶  civicseal-gnps.vercel.app  (or subdomain)
+                                    │
+                         ┌──────────┼──────────┐
+                         ▼          ▼          ▼
+                    SvelteKit   Supabase     Resend
+                    (Vercel)    Postgres     (email)
+                                Storage
+                                Auth</code></pre>
+<p><strong>Component responsibilities:</strong></p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Hosted on</th>
+<th>Cost (Phase 1)</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Frontend</strong> — SvelteKit</td>
+<td>Vercel free tier</td>
+<td>$0</td>
+<td>Public submission form, supervisor confirm pages,
+counselor/SCRC/admin portals, roster dashboard, exports</td>
+</tr>
+<tr>
+<td><strong>Database</strong> — Supabase Postgres</td>
+<td>Supabase free tier (500 MB DB, 1 GB file storage)</td>
+<td>$0</td>
+<td>Students, submissions, evidence, audit log, course catalog</td>
+</tr>
+<tr>
+<td><strong>File storage</strong> — Supabase Storage</td>
+<td>Same</td>
+<td>$0</td>
+<td>Reflection essays, artifact uploads, supervisor confirmation
+receipts</td>
+</tr>
+<tr>
+<td><strong>Auth</strong> — Supabase Auth (magic link)</td>
+<td>Same</td>
+<td>$0</td>
+<td>Counselor / SCRC committee / admin login. No student auth in Phase
+1.</td>
+</tr>
+<tr>
+<td><strong>Email</strong> — Resend</td>
+<td>Resend free tier (3,000/mo)</td>
+<td>$0</td>
+<td>Supervisor confirmation links, counselor notifications.
+<strong>Phase 1 sends from a Resend-managed verified domain</strong>
+(e.g. <code>civicseal-gnps@resend.dev</code>) until item #6 of the
+IT-handoff brief is completed (SPF/DKIM on greatneck.k12.ny.us
+subdomain). Email body explains the unfamiliar sender.</td>
+</tr>
+<tr>
+<td><strong>Domain</strong> — Custom subdomain</td>
+<td>GNPS DNS or Vercel-provided</td>
+<td>$0</td>
+<td>civicseal.greatneck.k12.ny.us</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-2-architecture-after-it-integration">3.2 Phase 2
+architecture (after IT integration)</h3>
+<p>The Phase 2 architecture is the same code, with three
+substitutions:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Phase 1</th>
+<th>Phase 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Student auth</td>
+<td>Not present</td>
+<td>ClassLink / Google Workspace / Azure AD SSO via Supabase Auth
+providers</td>
+</tr>
+<tr>
+<td>SIS data ingestion</td>
+<td>Counselor uploads CSV</td>
+<td>Live Infinite Campus feed (OneRoster API or nightly export to
+S3/SFTP)</td>
+</tr>
+<tr>
+<td>Hosting</td>
+<td>Vercel free / Supabase free</td>
+<td>IT decides: keep SaaS under district account, or self-host (Postgres
++ reverse proxy on GNPS infrastructure)</td>
+</tr>
+</tbody>
+</table>
+<p>Phase 2 also unlocks the <strong>student-facing portal</strong>: each
+student logs in, sees a live progress bar, submits evidence themselves,
+and family members can be granted read-only view access. Counselor and
+admin views remain.</p>
+<p>The codebase does not change between phases — only configuration.
+This is intentional: it means the IT promotion conversation is “flip
+these three switches once,” not “rebuild the application.”</p>
+<hr />
+<h2 id="data-model">4. Data model</h2>
+<h3 id="core-entities">4.1 Core entities</h3>
+<pre><code>students
+  ├── id (text, e.g. GN20271234)
+  ├── last_name, first_name
+  ├── grad_year (int, e.g. 2027)
+  ├── counselor_id (fk → users)
+  ├── accommodations_flag (bool, IEP/504 — drives Regents safety-net handling)
+  ├── transferred_in_date (date, nullable)
+  └── status (enum: active, awarded, withdrawn, graduated_without_seal)
+
+course_catalog
+  ├── id, course_code, title
+  ├── counts_for (array: &#39;1a&#39; | &#39;1d&#39; | &#39;2c&#39;)
+  ├── credits (decimal)
+  ├── scrc_approved (bool, true after committee blesses)
+  └── scrc_approved_at, scrc_approved_by
+
+course_enrollment
+  ├── student_id (fk)
+  ├── course_id (fk)
+  ├── school_year, term
+  ├── final_grade (int 0-100)
+  └── credit_status (enum: passed, failed, in_progress)
+
+regents_scores
+  ├── student_id (fk)
+  ├── exam_code (enum: &#39;GLOBAL_II&#39;, &#39;US_HISTORY&#39;)
+  ├── score (int 0-100)
+  ├── exam_date
+  ├── safety_net_applied (bool, IEP/504 alternate scoring)
+  └── proficiency_level (computed: &#39;mastery&#39; if ≥85, &#39;proficiency&#39; if 65-84, &#39;safety_net_pass&#39; if 55-64 + flag)
+
+pathway_submissions  ◀── central entity for pathways with submitted evidence
+                       (participation + research projects).
+                       SIS-derived pathways do NOT have rows here — they are
+                       computed at read time from course_enrollment + regents_scores
+                       (see §4.2 SIS-derived pathway lifecycle).
+  ├── id, student_id (fk)
+  ├── pathway_type (enum: research_project, hs_civic_project,
+  │                       service_learning, civic_elective_essay,
+  │                       wbl_extracurr, ms_capstone, hs_capstone)
+  │   note: civic_elective_essay covers the application-of-knowledge essay
+  │         component of pathway 2c; the proficiency-grade component is
+  │         computed from course_enrollment, not stored here.
+  ├── status (enum: draft, proposed, topic_approved, in_progress,
+  │                 submitted, scored, awarded, rejected, revoked)
+  ├── points_awarded (decimal, nullable)
+  ├── instance_number (int, for repeatable pathways and 2x-cap on hs_civic_project)
+  ├── domain_tags (array: &#39;knowledge&#39;, &#39;skills&#39;, &#39;mindsets&#39;, &#39;experiences&#39;)
+  ├── proposed_at, topic_approved_at, submitted_at, scored_at, awarded_at
+  ├── proposed_by_text, topic_approved_by (fk → users), scored_by (fk → users)
+  ├── rubric_scores (jsonb — pathway-specific rubric data)
+  └── notes (text, free-form reviewer comments)
+
+hours_log  (1:N from pathway_submissions for service_learning + wbl_extracurr)
+  ├── submission_id (fk)
+  ├── activity_name, organization
+  ├── service_type (enum for 2b: direct, indirect, advocacy)
+  ├── hours, date_start, date_end
+  ├── supervisor_name, supervisor_email, supervisor_org
+  ├── confirmation_token (uuid, signed)
+  ├── confirmation_status (enum: pending, confirmed, disputed, expired)
+  ├── confirmation_sent_at, confirmation_responded_at
+  └── confirmer_ip (audit)
+
+evidence_files
+  ├── id, submission_id (fk)
+  ├── storage_path (Supabase storage ref)
+  ├── filename, mime_type, size_bytes
+  ├── kind (enum: reflection_essay, artifact, presentation,
+  │              supervisor_receipt, rubric_scoresheet)
+  ├── domain_tags (array, links to NYSED civic-readiness domains)
+  └── uploaded_at, uploaded_by
+
+users  (staff only — counselors, SCRC committee, admins)
+  ├── id, email
+  ├── role (enum: counselor, scrc_member, admin)
+  ├── full_name
+  └── caseload_filter (jsonb — counselors see assigned students by default)
+
+audit_log
+  ├── id, occurred_at, actor_id (fk → users, nullable for student/supervisor actions)
+  ├── action (enum: student_submitted, supervisor_confirmed, counselor_approved,
+  │                 scrc_approved_topic, scrc_scored, admin_imported_csv,
+  │                 admin_exported_audit_pack, ...)
+  ├── target_type, target_id
+  ├── ip, user_agent
+  └── data (jsonb — relevant field values before/after)</code></pre>
+<p>The audit_log is <strong>append-only</strong> — its retention policy
+is “indefinite while seal records exist.” NYSED can audit a district at
+any time to verify that students who received the seal genuinely earned
+it.</p>
+<h3 id="pathway-lifecycles">4.2 Pathway lifecycles</h3>
+<p><strong>Project-type pathways</strong>
+(<code>research_project</code>, <code>hs_civic_project</code>,
+<code>hs_capstone</code>, <code>ms_capstone</code>):</p>
+<pre><code>[draft] ──student-edits──▶ [proposed]
+                                │  SCRC reviews
+                ┌───────────────┼───────────────┐
+                ▼               ▼               ▼
+        [topic_approved]   [proposed]    [rejected]
+                │            (revisions)
+                │ student does the work
+                ▼
+            [in_progress]
+                │ student uploads evidence + reflection
+                ▼
+            [submitted]
+                │ SCRC scores against NYSED rubric
+                ▼
+            [scored]  ◀── points calculated, written to record
+                │ counselor confirms point total enters seal calculation
+                ▼
+            [awarded]</code></pre>
+<p><strong>Hours-based pathways</strong> (<code>service_learning</code>,
+<code>wbl_extracurr</code>):</p>
+<pre><code>[student logs hours] → [supervisor email auto-sent with signed link]
+                                │
+                                ▼
+                       [supervisor clicks confirm or dispute]
+                                │
+                                ▼  (after 25 hrs for 2b, 40 hrs for 2e accumulated)
+                       [student writes reflection]
+                                │
+                                ▼
+                       [counselor reviews reflection]
+                                │
+                                ▼
+                       [scored / awarded]</code></pre>
+<p><strong>SIS-derived pathways</strong> (1a 4-SS-credits, 1b/1c Regents
+proficiency, 1d advanced SS, 2c civic-elective proficiency
+component):</p>
+<pre><code>[CSV import or live IC sync] → [course_enrollment + regents_scores rows] → [points computed at read time]
+                                                                                      │
+                                                                                      ▼
+                                                                        [appears on roster, no review]</code></pre>
+<p><strong>These pathways have no <code>pathway_submissions</code>
+row.</strong> They are evaluated by querying
+<code>course_enrollment</code> and <code>regents_scores</code> against
+<code>course_catalog.counts_for</code> and the Regents proficiency
+thresholds. The system represents them in API responses as virtual
+pathway records (with stable computed IDs like
+<code>sis:1a:GN20271234</code>) so the frontend can render them in the
+same roster UI as evidence-backed pathways without special-casing.</p>
+<p>The civic-elective pathway (2c) splits across systems: the
+proficiency <em>grade</em> component comes from IC (computed), but the
+<em>application-of-knowledge essay</em> component is an evidence file
+the student submits and is stored as a <code>civic_elective_essay</code>
+row in <code>pathway_submissions</code>. Points award only when both
+halves exist for the same course-year.</p>
+<h3 id="rules-baked-into-the-data-layer">4.3 Rules baked into the data
+layer</h3>
+<ul>
+<li>2a (HS Civic Project) caps at 2 instances → maximum 3 points</li>
+<li>1b/1c/1d/2b/2c/2d/2e: repeatable, no cap</li>
+<li>2d (MS Capstone, in the criteria-PDF labeling) only counts if grade
+level at submission was 7 or 8</li>
+<li>2e (extra-curr/WBL) hours may aggregate across multiple activities
+and across all four years of HS</li>
+<li>A student is <code>eligible</code> when: total points ≥ 6 AND
+knowledge column ≥ 2 AND participation column ≥ 2</li>
+<li><code>eligible</code> is not the same as <code>awarded</code>;
+counselor must confirm to advance the state</li>
+<li>IEP/504 testing accommodations honored: safety-net Regents passes
+are scored as proficiency for 1c</li>
+</ul>
+<h3 id="infinite-campus-csv-import-format-phase-1">4.4 Infinite Campus
+CSV import format (Phase 1)</h3>
+<p>Counselor-uploaded CSV, one row per (student, course-or-exam)
+pair:</p>
+<pre class="csv"><code>student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit
+GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2024-2025,passed
+GN20271234,Goldberg,Maya,2027,course,SS_US_HISTORY,2025-2026,passed
+GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2025-06-15,87
+GN20271234,Goldberg,Maya,2027,regents,US_HISTORY,2026-06-12,91
+GN20271234,Goldberg,Maya,2027,course,AP_US_GOV,2026-2027,in_progress</code></pre>
+<p><strong>Fields:</strong> -
+<code>kind ∈ {course, regents, demographic}</code> - <code>code</code>
+is a course code (matched against <code>course_catalog</code>) or exam
+code (<code>GLOBAL_II</code>, <code>US_HISTORY</code>) -
+<code>year_or_date</code>: school year (<code>YYYY-YYYY</code>) for
+courses, exam date (<code>YYYY-MM-DD</code>) for Regents -
+<code>score_or_credit</code>: integer Regents score (0–100), or one of
+<code>passed | failed | in_progress</code></p>
+<p>The importer validates and reports a diff: which rows are new, which
+update existing records, which are unchanged. Admin reviews the diff
+before committing. All imports write to <code>audit_log</code> with the
+source filename and row count.</p>
+<p>For the Phase 2 live IC integration, the JSON shape coming from
+OneRoster or a custom IC export will be transformed by an adapter into
+this same internal shape — so the rest of the system does not
+change.</p>
+<h3 id="nysed-audit-pack-export-format">4.5 NYSED audit pack export
+format</h3>
+<p>Year-end exports produce a zip per graduation cohort:</p>
+<pre><code>nysed_audit_pack_class_of_2027.zip
+├── roster.csv                          ← all 412 students, status column
+├── awarded_students.csv                ← subset who were awarded (transcript office input)
+├── per_student/
+│   ├── GN20271234_Goldberg_Maya.pdf   ← portfolio: pathways, evidence list, rubrics, audit log excerpt
+│   ├── GN20275511_Chen_David.pdf
+│   └── …
+├── evidence_files/
+│   ├── GN20271234/                    ← all uploaded artifacts
+│   │   ├── service_learning_reflection.pdf
+│   │   ├── capstone_artifact_v3.pdf
+│   │   └── …
+│   └── …
+└── audit_log_excerpt.csv              ← every state transition, signed</code></pre>
+<p>The per-student PDF is the document a NYSED auditor would review.</p>
+<hr />
+<h2 id="user-roles-flows">5. User roles &amp; flows</h2>
+<h3 id="roles">5.1 Roles</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Role</th>
+<th>Phase 1 auth</th>
+<th>Phase 2 auth</th>
+<th>Capabilities</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Student</strong></td>
+<td>None — submission keyed by Student ID + last name + grad year
+(de-duped server-side)</td>
+<td>District SSO (ClassLink / Google / Azure)</td>
+<td>Submit evidence; view own progress (Phase 2)</td>
+</tr>
+<tr>
+<td><strong>Supervisor</strong></td>
+<td>None — signed email link</td>
+<td>Same</td>
+<td>Confirm or dispute hours via one-click email link (no account)</td>
+</tr>
+<tr>
+<td><strong>Counselor</strong></td>
+<td>Magic-link login</td>
+<td>District SSO</td>
+<td>Review hours/reflections, approve point awards, see own caseload
+roster</td>
+</tr>
+<tr>
+<td><strong>SCRC Committee Member</strong></td>
+<td>Magic-link login</td>
+<td>District SSO</td>
+<td>Pre-approve project topics; score completed projects against NYSED
+rubrics</td>
+</tr>
+<tr>
+<td><strong>Admin</strong></td>
+<td>Magic-link login</td>
+<td>District SSO</td>
+<td>Manage course catalog, import IC CSV, manage user roster, generate
+NYSED audit pack</td>
+</tr>
+</tbody>
+</table>
+<h3 id="student-submission-flow-example-service-learning-hours">5.2
+Student submission flow (example: service-learning hours)</h3>
+<ol type="1">
+<li>Student visits
+<code>civicseal.greatneck.k12.ny.us/submit</code></li>
+<li>Enters Student ID + last name + grad year → server matches roster
+record</li>
+<li>Selects pathway (Service-Learning) → form adapts to NYSED
+requirements:
+<ul>
+<li>Activity / organization name</li>
+<li>Date range</li>
+<li>Hours this submission</li>
+<li>Service type (NYSED-defined: Direct, Indirect, Advocacy)</li>
+<li>Supervisor name + email</li>
+<li>Brief description (1–3 sentences)</li>
+</ul></li>
+<li>On submit:
+<ul>
+<li><code>pathway_submissions</code> row created with
+<code>status = submitted</code></li>
+<li><code>hours_log</code> row created with
+<code>confirmation_status = pending</code></li>
+<li><code>audit_log</code> records the event</li>
+<li>System emails supervisor a signed confirmation link</li>
+<li>Student sees confirmation: “Your hours are pending supervisor
+confirmation. You can add reflection later.”</li>
+</ul></li>
+</ol>
+<h3 id="supervisor-confirmation-flow">5.3 Supervisor confirmation
+flow</h3>
+<ol type="1">
+<li>Supervisor receives email. In Phase 1, the sender is a
+Resend-managed verified address (the email body identifies the program
+and links back to the GNPS-themed portal so recipients can sanity-check
+legitimacy). In Phase 2, sender becomes
+<code>civicseal@greatneck.k12.ny.us</code> once SPF/DKIM are added.</li>
+<li>Email body: brief context + two buttons
+(<code>Confirm 8 hours</code> / <code>Hours don't match</code>)</li>
+<li>Supervisor clicks → lands on a no-auth page with the signed
+token</li>
+<li>Server validates token, marks <code>hours_log</code> row
+<code>confirmed</code>, records IP + timestamp in audit log</li>
+<li>Confirmation page shows: “Thanks. Maya can now use these hours
+toward her Seal of Civic Readiness.”</li>
+</ol>
+<p>The confirmation link expires in 14 days. If a supervisor clicks
+“Hours don’t match,” they’re prompted with a textarea to indicate the
+correct hours; this routes to the counselor queue for resolution.</p>
+<h3 id="scrc-committee-project-review-flow">5.4 SCRC committee project
+review flow</h3>
+<ol type="1">
+<li>Student proposes a project topic via
+<code>/submit?type=hs_capstone</code> — provides issue identification,
+scope, civic-experience plan, advisor name, mapping to the four NYSED
+domains</li>
+<li>Submission lands in SCRC dashboard with status
+<code>proposed</code></li>
+<li>SCRC member reviews against NYSED Appendix P essential elements:
+<ul>
+<li>Identify an issue (local/state/national/global) ✓</li>
+<li>Apply civic knowledge, skills, actions, and mindsets ✓</li>
+<li>Engage in a civic experience to influence positive change ✓</li>
+<li>Present overall project to the school’s Civic Readiness Committee
+(deferred until completion)</li>
+</ul></li>
+<li>Three actions: Approve topic / Request revisions / Reject</li>
+<li>On approval, <code>status = topic_approved</code>, student receives
+email, can begin work</li>
+<li>After student completes work and uploads evidence, status moves to
+<code>submitted</code></li>
+<li>SCRC member scores against the published rubric (Appendix P for HS
+Capstone, F for Research Project, G for HS Civic Project) — rubric
+scores stored as JSON</li>
+<li>On scoring complete, points await counselor confirmation to enter
+the seal calculation</li>
+</ol>
+<h3 id="counselor-approval-queue">5.5 Counselor approval queue</h3>
+<ol type="1">
+<li>Counselor logs in via magic link → lands on dashboard scoped to
+caseload</li>
+<li>Approval queue lists all <code>submitted</code> reflections +
+<code>confirmed</code>-but-unreflected hours-based submissions</li>
+<li>Each item shows:
+<ul>
+<li>Student name + ID + grade</li>
+<li>Pathway type + claim (“Service-Learning, 25hrs, all 5 stages
+addressed”)</li>
+<li>Inline reflection text (so counselor doesn’t need to download)</li>
+<li>Supporting evidence file list</li>
+<li>Three actions: Approve · award N points · Request revision ·
+Decline</li>
+</ul></li>
+<li>Approval writes points to the submission record, advances to
+<code>awarded</code>, records in audit log</li>
+</ol>
+<h3 id="admin-operations">5.6 Admin operations</h3>
+<ul>
+<li><strong>Roster import</strong>: drag-and-drop CSV from IC, preview
+diff, commit</li>
+<li><strong>Course catalog</strong>: edit which courses count for which
+pathways; SCRC approval recorded</li>
+<li><strong>User management</strong>: invite counselors and SCRC members
+by email, assign caseloads</li>
+<li><strong>NYSED audit pack export</strong>: one click, generates the
+zip described in §4.5</li>
+<li><strong>Cohort review</strong>: filter roster by grad year, status,
+eligibility; bulk transition <code>eligible</code> →
+<code>awarded</code> after final review</li>
+</ul>
+<hr />
+<h2 id="nysed-compliance-mapping">6. NYSED compliance mapping</h2>
+<p>Every awarded point traces to a NYSED rule citation. The system
+enforces these by default and surfaces them in audit-pack PDFs:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Pathway</th>
+<th>NYSED rule</th>
+<th>Evidence retained</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1a — 4 SS credits</td>
+<td>Manual p.10</td>
+<td>Course enrollment records (IC)</td>
+</tr>
+<tr>
+<td>1b — Mastery Regents</td>
+<td>Manual p.10</td>
+<td>Regents score records (IC)</td>
+</tr>
+<tr>
+<td>1c — Proficiency Regents</td>
+<td>Manual p.10</td>
+<td>Regents score records (IC)</td>
+</tr>
+<tr>
+<td>1d — Advanced SS</td>
+<td>Manual p.10</td>
+<td>Course enrollment + course catalog flag</td>
+</tr>
+<tr>
+<td>1e — Research Project</td>
+<td>Manual p.12, rubric in Appendix F</td>
+<td>SCRC topic approval + completed artifact + rubric scoresheet +
+reflection</td>
+</tr>
+<tr>
+<td>2a — HS Civic Project</td>
+<td>Manual p.17, rubric in Appendix G</td>
+<td>SCRC topic approval + artifact + rubric scoresheet + reflection</td>
+</tr>
+<tr>
+<td>2b — Service Learning</td>
+<td>Manual p.20, 5-stage process</td>
+<td>Hours log + supervisor confirmations + reflection covering all 5
+stages</td>
+</tr>
+<tr>
+<td>2c — Civic Elective</td>
+<td>Manual p.23</td>
+<td>Course enrollment + grade + application-of-knowledge essay</td>
+</tr>
+<tr>
+<td>2d — MS Capstone</td>
+<td>Manual p.24, essential elements</td>
+<td>MS teacher signoff + artifact + reflection (back-entered at 9th
+grade)</td>
+</tr>
+<tr>
+<td>2e — Extra-curr/WBL</td>
+<td>Manual p.23</td>
+<td>Hours log + supervisor confirmations + application essay</td>
+</tr>
+<tr>
+<td>2f — HS Capstone</td>
+<td>Manual p.26, 4 essential elements + rubric in Appendix P</td>
+<td>SCRC topic approval + civic experience evidence + presentation +
+rubric scoresheet + reflection</td>
+</tr>
+</tbody>
+</table>
+<p>The four NYSED civic-readiness domains (Knowledge / Skills / Mindsets
+/ Experiences) are surfaced as required tags on every reflection
+submission. This lets the audit pack PDF include a “domains addressed”
+matrix per student, which is how NYSED auditors evaluate whether a
+student’s portfolio actually demonstrates civic readiness rather than
+merely accumulating points.</p>
+<p><strong>Testing accommodations</strong> (IEP / Section 504): Regents
+safety-net passes (55–64 with the 45 variance) and accommodation-flagged
+scores are honored equivalently to standard proficiency, per NYSED
+policy. The <code>accommodations_flag</code> on the student record
+drives this branching automatically.</p>
+<hr />
+<h2 id="phase-1-phase-2-roadmap">7. Phase 1 → Phase 2 roadmap</h2>
+<h3 id="phase-1-pilot-launch-weeks-04-from-development-start">Phase 1 —
+Pilot launch (Weeks 0–4 from development start)</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Week</th>
+<th>Deliverable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Repository scaffolded; Postgres schema migrated; magic-link auth
+working for staff roles; GNPS theme tokens applied</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Public submission form (all 6 pathway types); supervisor email
+confirmation flow; audit log writes</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Counselor approval queue; SCRC project-proposal review; admin roster
++ progress calculations; CSV import; course catalog editor</td>
+</tr>
+<tr>
+<td>4</td>
+<td>NYSED audit-pack export; pilot deploy; onboarding documentation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Phase 1 audience:</strong> Social Studies department + a
+small counselor pilot. Not yet promoted to students or families.</p>
+<h3 id="phase-1.5-pilot-stabilization-months-13-in-production">Phase 1.5
+— Pilot stabilization (Months 1–3 in production)</h3>
+<ul>
+<li>First cohort of senior submissions runs end-to-end</li>
+<li>SCRC committee onboarded (or formed if it does not yet exist)</li>
+<li>Workflow gaps documented for the IT brief</li>
+<li>District applies to NYSED via the SED Application Business Portal —
+gates the actual conferral of seals on transcripts</li>
+</ul>
+<h3 id="phase-2-it-integrated-full-launch">Phase 2 — IT-integrated full
+launch</h3>
+<ul>
+<li>District SSO (ClassLink / Google Workspace / Azure AD) replaces
+magic-link auth</li>
+<li>Student-facing portal with live progress bar and self-service
+evidence submission</li>
+<li>Family-visible read-only progress view</li>
+<li>Live Infinite Campus sync (OneRoster API or nightly export job)
+replaces CSV import</li>
+<li>Optional migration to GNPS-hosted Postgres (or stay on Supabase
+under district account)</li>
+<li>Mobile-optimized redesign pass</li>
+</ul>
+<hr />
+<h2 id="it-handoff-brief">8. IT-handoff brief</h2>
+<p>Phase 1 has zero IT dependency. The following items are required to
+promote to Phase 2 and own the system long-term. They are listed in the
+order they typically need to be addressed.</p>
+<ol type="1">
+<li><strong>NYSED district application</strong> <em>(Curriculum &amp;
+Instruction action, gates everything)</em>. Great Neck must apply via
+the SED Application Business Portal to be authorized to award the seal.
+Approximately 30 days for state review. Without this approval, the
+system can track everything but seals cannot be conferred on
+transcripts.</li>
+<li><strong>Domain CNAME.</strong> Point
+<code>civicseal.greatneck.k12.ny.us</code> (or chosen subdomain) to
+Vercel. Approximately 5 minutes of DNS work. Vercel handles SSL
+provisioning automatically.</li>
+<li><strong>FERPA / privacy review.</strong> Phase 1 architecture:
+Supabase US-East region, encrypted at rest and in transit, role-based
+access controls, full audit log. Confirm acceptable for FERPA-covered
+student data. Sign Supabase Data Processing Agreement if district policy
+requires.</li>
+<li><strong>SSO integration.</strong> Choose: ClassLink, Google
+Workspace for Education, or Azure AD. Use Supabase Auth providers (no
+application code change required) or migrate to a district-managed
+identity provider. Drives the Phase 2 student portal.</li>
+<li><strong>Infinite Campus integration.</strong> Provide read access
+to:
+<ul>
+<li>Student roster (id, name, grad year, counselor)</li>
+<li>Course enrollment (course code, school year, credit status)</li>
+<li>Regents scores (exam, score, accommodation flag) Two acceptable
+shapes: (a) OneRoster API if Infinite Campus supports it at GNPS, (b)
+nightly CSV export to S3 or SFTP. Either is supported by the
+codebase.</li>
+</ul></li>
+<li><strong>Email reputation.</strong> Supervisor confirmations send
+from <code>civicseal@greatneck.k12.ny.us</code>. Either:
+<ul>
+<li>Use district SMTP credentials, or</li>
+<li>Keep Resend and add SPF / DKIM records to GNPS DNS for the
+subdomain</li>
+</ul></li>
+<li><strong>GNPS website integration.</strong> Choose one of three
+options detailed in §10.</li>
+<li><strong>Long-term hosting decision.</strong> Free-tier Vercel +
+Supabase covers the GNPS scale (~6,800 students) for years. IT can keep
+that tier under a district-paid account, or self-host the same code on
+GNPS infrastructure. Either path is supported. No code changes are
+required to switch.</li>
+</ol>
+<hr />
+<h2 id="open-source-repository-structure">9. Open-source repository
+structure</h2>
+<pre><code>civic-readiness-portal/
+├── README.md                  · overview · screenshots · quick-start
+├── LICENSE                    · MIT
+├── CONTRIBUTING.md            · how peer districts contribute
+├── SECURITY.md                · vulnerability reporting (responsible disclosure)
+├── CODE_OF_CONDUCT.md         · community norms
+├── docs/
+│   ├── architecture.md        · this design document
+│   ├── deployment-guide.md    · &quot;deploy for your district in 1 hour&quot;
+│   ├── it-handoff-brief.md    · the §8 brief, standalone
+│   ├── nysed-mapping.md       · pathway → NYSED rule citations
+│   ├── data-import-guide.md   · IC CSV format spec; adapter for other SIS systems
+│   └── customization.md       · rebrand for non-GNPS districts (theme tokens)
+├── apps/web/                  · SvelteKit frontend
+│   ├── src/routes/
+│   │   ├── +page.svelte       · public landing
+│   │   ├── submit/            · student submission flows
+│   │   ├── confirm/[token]/   · supervisor email-link landing
+│   │   ├── counselor/         · approval queue + roster
+│   │   ├── scrc/              · committee project review
+│   │   └── admin/             · roster import + course catalog + NYSED export
+│   ├── src/lib/theme/         · brand tokens (district-swappable)
+│   └── src/lib/pathways/      · NYSED rule engine
+├── supabase/
+│   ├── migrations/            · SQL schema (versioned)
+│   ├── functions/             · edge functions (supervisor emails, scheduled jobs)
+│   └── seed.sql               · sample data for development
+├── packages/
+│   ├── pathway-rules/         · NYSED logic, separately testable
+│   └── nysed-export/          · audit-pack PDF + roster CSV generator
+├── scripts/
+│   ├── ic-csv-import/         · reference IC CSV importer
+│   └── nysed-export.ts        · CLI for ad-hoc exports
+├── config/
+│   └── district.yaml          · district-specific config (colors, logo, course catalog)
+├── .github/workflows/         · CI tests, staging auto-deploy, prod manual gate
+└── tests/{unit,integration,e2e}</code></pre>
+<p><strong>License:</strong> MIT. Permissive enough that other districts
+and even commercial vendors can fork without legal friction.</p>
+<p><strong>Initial repository location:</strong>
+<code>github.com/&lt;jon-handle&gt;/civic-readiness-portal</code> until
+GNPS leadership approves public release. Then transferred to
+<code>github.com/great-neck-public-schools/civic-readiness-portal</code>
+(or an org of leadership’s choosing). Access can stay private during
+initial development.</p>
+<p><strong>District customization:</strong> Forks edit
+<code>config/district.yaml</code> — colors, logo URL, course catalog
+seed, SCRC member emails, domain — without touching application source.
+This is part of the leadership pitch: GNPS publishes the standard, peers
+adopt it.</p>
+<p><strong>Theme tokens</strong> (extracted live from
+greatneck.k12.ny.us): - Primary color: <code>#204A97</code> (royal navy)
+- Secondary color: <code>#FE8158</code> (warm coral) - Heading font:
+Outfit (Google Fonts) - Body font: Roboto (Google Fonts) - Long-form
+font: Literata (Google Fonts; for reflection display) - Logo: GNPS round
+logo from the district CDN</p>
+<hr />
+<h2 id="gnps-website-integration-options">10. GNPS website integration
+options</h2>
+<p>All three options use the same codebase. IT chooses based on
+Finalsite policy and how seamless the URL experience needs to be.</p>
+<h3 id="option-a-subdomain-cname-recommended">Option A — Subdomain CNAME
+(recommended)</h3>
+<p>User journey: from greatneck.k12.ny.us, the Social Studies department
+page links to <code>civicseal.greatneck.k12.ny.us</code>. Click
+navigates the user to the standalone portal, GNPS-themed throughout.</p>
+<ul>
+<li><strong>IT effort:</strong> approximately 5 minutes — one DNS CNAME
+record. Vercel handles SSL automatically.</li>
+<li><strong>Pro:</strong> cleanest URL, district-branded, full
+application capabilities, no iframe quirks</li>
+<li><strong>Con:</strong> visible domain change on click (mitigated by
+matching brand)</li>
+</ul>
+<h3 id="option-b-iframe-embed-in-finalsite-page">Option B — iframe embed
+in Finalsite page</h3>
+<p>User journey: from greatneck.k12.ny.us, the Social Studies page
+contains an embedded iframe pointing at the SoCR app. URL stays on
+greatneck.k12.ny.us.</p>
+<ul>
+<li><strong>IT effort:</strong> approximately 30 minutes inside the
+Finalsite editor; auto-resize configuration</li>
+<li><strong>Pro:</strong> URL stays on the district domain</li>
+<li><strong>Con:</strong> file uploads and SSO popups inside iframes are
+fragile; scroll behavior is awkward; this is the Seaford pattern; some
+Finalsite tiers strip iframes</li>
+</ul>
+<h3 id="option-c-reverse-proxy-via-finalsite-or-cloudflare">Option C —
+Reverse proxy via Finalsite or Cloudflare</h3>
+<p>User journey: greatneck.k12.ny.us/socr serves the application
+directly via path-rewrite rules. URL never changes; no iframe; the
+Vercel origin is invisible.</p>
+<ul>
+<li><strong>IT effort:</strong> approximately half a day; opens a
+Finalsite ticket or stands up a Cloudflare Worker</li>
+<li><strong>Pro:</strong> most seamless — URL never leaves district
+domain; works with SSO better than iframe</li>
+<li><strong>Con:</strong> Finalsite tier may not allow path rewrites;
+Cloudflare alternative adds infrastructure; highest IT lift</li>
+</ul>
+<p><strong>Recommendation:</strong> start with Option A. Switch to B or
+C later if leadership wants the URL to stay on greatneck.k12.ny.us.
+Switching is a configuration change, not a code change.</p>
+<hr />
+<h2 id="cost-analysis">11. Cost analysis</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Vercel</th>
+<th>Supabase</th>
+<th>Resend</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase 1 (free tiers)</td>
+<td>$0</td>
+<td>$0</td>
+<td>$0</td>
+<td><strong>$0/mo</strong></td>
+</tr>
+<tr>
+<td>Phase 2 (likely state at GNPS scale)</td>
+<td>$0</td>
+<td>$0–25</td>
+<td>$0</td>
+<td><strong>$0–25/mo</strong></td>
+</tr>
+<tr>
+<td>Self-hosted alternative</td>
+<td>GNPS infra + ops time</td>
+<td>Same</td>
+<td>Same or district SMTP</td>
+<td>District-internal cost</td>
+</tr>
+</tbody>
+</table>
+<p>GNPS scale (~6,800 students; ~412 per graduating class; ~2,500 active
+submissions per year at steady state) fits comfortably within all three
+free tiers for the foreseeable future:</p>
+<ul>
+<li>Supabase free tier: 500 MB database, 1 GB file storage. At ~10 KB
+per submission record + ~500 KB per artifact upload, GNPS would use
+roughly 5–10 MB DB and 200–400 MB file storage per year. Free tier
+supports this for 3+ years before pressure.</li>
+<li>Resend free tier: 3,000 emails per month. Supervisor confirmations +
+counselor notifications come to roughly 800–1,200 per month at steady
+state.</li>
+<li>Vercel free tier: 100 GB bandwidth per month. Application is
+asset-light; well within limits.</li>
+</ul>
+<p>Supabase Pro at $25/mo would only become relevant if the district
+wants daily backups beyond the free tier’s point-in-time recovery, or
+anticipates exceeding 500 MB DB (unlikely at GNPS scale until ~year
+5).</p>
+<hr />
+<h2 id="risks-mitigations">12. Risks &amp; mitigations</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Likelihood</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GNPS does not apply to NYSED in time, blocking seal conferral</td>
+<td>Medium</td>
+<td>High</td>
+<td>Flagged as IT-brief item #1; track explicitly; can begin in parallel
+with Phase 1 development</td>
+</tr>
+<tr>
+<td>IT review takes longer than expected, stalling Phase 2</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Phase 1 is fully usable independently; staff-only pilot continues
+regardless</td>
+</tr>
+<tr>
+<td>Counselor approval workload becomes burdensome</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Two-tier verification (supervisor email handles fraud risk on
+hours); approval queue UI optimized for fast review; can adjust to honor
+system + spot audit if needed</td>
+</tr>
+<tr>
+<td>Student / supervisor data quality issues (typos in supervisor
+emails, etc.)</td>
+<td>High</td>
+<td>Low</td>
+<td>Form validation; confirmation links bounce visibly; admin can
+re-issue from queue</td>
+</tr>
+<tr>
+<td>Supabase or Vercel pricing changes</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Codebase is portable; can self-host on GNPS infrastructure with no
+application changes</td>
+</tr>
+<tr>
+<td>FERPA review surfaces blocker</td>
+<td>Low</td>
+<td>High</td>
+<td>Architecture is conservative (US region, encrypted, audit-logged);
+DPA is standard for both vendors; if blocker, self-host path is
+available without rewriting</td>
+</tr>
+<tr>
+<td>Other districts fork and build competing product</td>
+<td>Low</td>
+<td>Low</td>
+<td>This is in fact the goal — open-source positioning; GNPS keeps
+reputation as originator</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendices">13. Appendices</h2>
+<h3 id="appendix-a-nysed-criteria-verbatim">Appendix A — NYSED criteria,
+verbatim</h3>
+<p>(Reproduced from the NYSED Criteria document,
+https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness)</p>
+<blockquote>
+<p>In order to obtain the Seal of Civic Readiness, a student must
+complete all the requirements for a New York State local or Regents
+diploma and earn a total of six points with at least two points in Civic
+Knowledge and at least two points in Civic Participation.</p>
+</blockquote>
+<p>The point chart is reproduced in §1.2 of this document.</p>
+<h3 id="appendix-b-nysed-capstone-essential-elements-verbatim">Appendix
+B — NYSED Capstone essential elements, verbatim</h3>
+<p>(Reproduced from the NYS Seal of Civic Readiness Manual, p.16 and
+p.26)</p>
+<blockquote>
+<p>2f. High School Capstone Project — 4 pts</p>
+<ul>
+<li>Identify an issue (local, state, national, or global)</li>
+<li>Apply civic knowledge, skills, actions, and mindsets to the
+issue</li>
+<li>Engage in a civic experience based on the issue to influence
+positive change to the community (local, state, national, or
+global)</li>
+<li>Present overall project to the school’s Civic Readiness
+Committee</li>
+</ul>
+</blockquote>
+<h3 id="appendix-c-service-learning-5-stage-process-verbatim">Appendix C
+— Service Learning 5-stage process, verbatim</h3>
+<p>(Reproduced from NYS Seal of Civic Readiness Manual, p.20)</p>
+<blockquote>
+<p>Service-learning projects are typically organized into five stages:
+1. Investigation — conduct research on a community-based problem or
+needs 2. Preparation — create a plan to address these needs 3. Conduct
+Action — Direct service / Indirect service / Advocacy 4. Reflection —
+required to earn the point for the NYSED Civics Diploma Seal 5.
+Demonstration / celebration — can be combined with the presentation of
+the project and reflection</p>
+</blockquote>
+<h3 id="appendix-d-glossary">Appendix D — Glossary</h3>
+<ul>
+<li><strong>NYSED</strong> — New York State Education Department</li>
+<li><strong>NYSSCR</strong> — New York State Seal of Civic Readiness
+(the credential this system tracks)</li>
+<li><strong>SCRC</strong> — Seal of Civic Readiness Committee
+(district-level body that approves project topics and scores completed
+work; required by NYSED)</li>
+<li><strong>+1 Pathway</strong> — A NYS diploma pathway option; the Seal
+of Civic Readiness counts as one</li>
+<li><strong>OneRoster</strong> — IMS Global standard for SIS roster data
+exchange (one of the IC integration options)</li>
+<li><strong>FERPA</strong> — Family Educational Rights and Privacy Act;
+governs student-record privacy</li>
+<li><strong>DPA</strong> — Data Processing Agreement; the legal contract
+between a school district and a SaaS vendor for FERPA-covered data</li>
+<li><strong>Audit pack</strong> — The year-end zip the system produces
+containing per-student PDFs, roster CSV, evidence files, and audit log
+excerpt; the artifact NYSED auditors would review</li>
+</ul>
+<h3 id="appendix-e-sources">Appendix E — Sources</h3>
+<ul>
+<li>NYSED Seal of Civic Readiness Information:
+https://www.nysed.gov/standards-instruction/seal-civic-readiness-information</li>
+<li>NYSED Criteria document:
+https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness</li>
+<li>NYSED Seal of Civic Readiness Manual (Updated 2024):
+https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual</li>
+<li>NYSED Civic Readiness Initiative:
+https://www.nysed.gov/standards-instruction/civic-readiness-initiative</li>
+<li>NYSED Approved Schools list:
+https://www.nysed.gov/curriculum-instruction/approved-seal-civic-readiness-schools</li>
+<li>Seaford HS landing page (peer district):
+https://seafordhigh.seaford.k12.ny.us/students-families/nys-seal-of-civic-readiness</li>
+<li>3 Village CSD landing page:
+https://sites.google.com/3villagecsd.org/seal-of-civic-readiness/home</li>
+<li>Connetquot CSD landing page:
+https://www.ccsdli.org/departments/seal_of_civic_readiness</li>
+<li>Great Neck Public Schools (theme source):
+https://www.greatneck.k12.ny.us/</li>
+</ul>
+<hr />
+<p><strong>End of design document.</strong></p>
