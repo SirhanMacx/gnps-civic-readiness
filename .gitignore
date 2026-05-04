@@ -1,1 +1,12 @@
 .superpowers/
+node_modules/
+.env
+.env.local
+.svelte-kit/
+.vercel/
+build/
+coverage/
+*.log
+.DS_Store
+supabase/.branches
+supabase/.temp
