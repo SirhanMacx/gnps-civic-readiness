@@ -29,7 +29,9 @@ jobs:
         run: pnpm run sync-vendored
 
       - name: Typecheck
-        run: pnpm --filter ./apps/web exec svelte-kit sync && pnpm --filter ./apps/web exec svelte-check --tsconfig ./tsconfig.json --threshold error
+        run: |
+          pnpm --filter ./apps/web exec svelte-kit sync
+          pnpm --filter ./apps/web exec svelte-check --tsconfig ./tsconfig.json --threshold error
 
       - name: Test (pathway-rules)
         run: pnpm --filter @gnps-civic/pathway-rules test
@@ -37,5 +39,36 @@ jobs:
       - name: Test (nysed-export)
         run: pnpm --filter @gnps-civic/nysed-export test
 
-      - name: Build
+      - name: Test (web app)
+        run: pnpm --filter ./apps/web test
+
+      - name: Build (Vercel adapter — legacy)
         run: pnpm --filter ./apps/web build
+
+      - name: Build (Node adapter — self-host)
+        env:
+          SVELTE_ADAPTER: node
+        run: pnpm --filter ./apps/web build
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build app Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: gnps-civic-readiness:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Validate docker-compose syntax
+        run: |
+          docker compose -f docker-compose.yml config > /dev/null
+          echo "✓ docker-compose.yml is valid"
