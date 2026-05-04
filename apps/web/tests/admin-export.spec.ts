@@ -140,7 +140,7 @@ vi.mock('$server/supabase.js', () => ({
   })
 }));
 
-const { loadCohort } = await import('../src/lib/server/roster.js');
+const { loadCohort } = await import('../src/lib/server/cohort.js');
 const { rosterCsv, awardedCsv, auditCsv, renderStudentPdf, bundleZip } = await import(
   '$lib/nysed-export/index.js'
 );
