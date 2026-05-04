@@ -29,7 +29,7 @@ export async function createServiceSubmission(input: ServiceSubmission): Promise
   const sb = supabaseAdmin();
 
   // Upsert student record (Phase 1 has no IC integration; trust the form)
-  await sb.from('students').upsert(
+  const { error: eStudent } = await sb.from('students').upsert(
     {
       id: data.studentId,
       last_name: data.studentLastName,
@@ -38,6 +38,7 @@ export async function createServiceSubmission(input: ServiceSubmission): Promise
     },
     { onConflict: 'id' }
   );
+  if (eStudent) throw new Error(`students.upsert failed: ${eStudent.message} (code=${eStudent.code})`);
 
   const { data: sub, error: e1 } = await sb
     .from('pathway_submissions')
@@ -50,7 +51,7 @@ export async function createServiceSubmission(input: ServiceSubmission): Promise
     })
     .select()
     .single();
-  if (e1 || !sub) throw e1 ?? new Error('pathway_submissions insert failed');
+  if (e1 || !sub) throw new Error(`pathway_submissions.insert failed: ${e1?.message ?? 'unknown'} (code=${e1?.code ?? 'n/a'})`);
 
   const { data: log, error: e2 } = await sb
     .from('hours_log')
@@ -69,7 +70,7 @@ export async function createServiceSubmission(input: ServiceSubmission): Promise
     })
     .select()
     .single();
-  if (e2 || !log) throw e2 ?? new Error('hours_log insert failed');
+  if (e2 || !log) throw new Error(`hours_log.insert failed: ${e2?.message ?? 'unknown'} (code=${e2?.code ?? 'n/a'})`);
 
   await sb.from('audit_log').insert({
     actor_kind: 'student',

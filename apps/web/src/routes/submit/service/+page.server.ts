@@ -28,8 +28,9 @@ export const actions: Actions = {
       await createServiceSubmission(parsed.data);
       return { success: true, supervisorEmail: parsed.data.supervisorEmail };
     } catch (e) {
-      console.error(e);
-      return fail(500, { error: 'Could not save submission. Please try again or email civicseal@greatneck.k12.ny.us.' });
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('createServiceSubmission failed:', msg, e);
+      return fail(500, { error: `Save failed: ${msg}` });
     }
   }
 };
