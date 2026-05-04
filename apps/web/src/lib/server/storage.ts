@@ -165,9 +165,25 @@ class FsBackend implements StorageBackend {
 // S3 backend (lazy)
 // ---------------------------------------------------------------------------
 
+/**
+ * Defer @aws-sdk/client-s3 to runtime so vite/rollup doesn't try to resolve
+ * the package at build time. Districts running with STORAGE_BACKEND=fs (the
+ * default) never pay the cost.
+ *
+ * Run `pnpm add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner` before
+ * setting STORAGE_BACKEND=s3.
+ */
+async function loadAwsModule(name: '@aws-sdk/client-s3' | '@aws-sdk/s3-request-presigner'): Promise<Record<string, unknown>> {
+  // The string concatenation defeats vite's static analysis — the module
+  // is only resolved at runtime, after the admin has installed the optional dep.
+  const dynName = name.split('@aws-sdk/').slice(1).join('@aws-sdk/');
+  const fullName = '@aws-sdk/' + dynName;
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
+  const dynImport = new Function('m', 'return import(m)') as (m: string) => Promise<Record<string, unknown>>;
+  return dynImport(fullName);
+}
+
 class S3Backend implements StorageBackend {
-  // pnpm add @aws-sdk/client-s3 to enable. We import it lazily so workspaces
-  // that stay on the filesystem backend don't pay the dep cost.
   private clientPromise: Promise<unknown> | null = null;
   private readonly bucket: string;
   private readonly prefix: string;
@@ -185,11 +201,9 @@ class S3Backend implements StorageBackend {
     if (this.clientPromise) return this.clientPromise;
     this.clientPromise = (async () => {
       try {
-        // Lazy import; if the package isn't installed we fail with a clear hint.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mod = (await import(/* @vite-ignore */ '@aws-sdk/client-s3' as string)) as any;
-        const { S3Client } = mod;
-        return new S3Client({
+        const mod = await loadAwsModule('@aws-sdk/client-s3');
+        const S3ClientCtor = mod.S3Client as new (cfg: unknown) => unknown;
+        return new S3ClientCtor({
           region: env.AWS_REGION ?? 'us-east-1',
           endpoint: env.S3_ENDPOINT || undefined,
           forcePathStyle: env.S3_FORCE_PATH_STYLE === 'true' ? true : undefined
@@ -197,8 +211,8 @@ class S3Backend implements StorageBackend {
       } catch (e) {
         throw new Error(
           'STORAGE_BACKEND=s3 selected but @aws-sdk/client-s3 is not installed. ' +
-            'Run `pnpm add @aws-sdk/client-s3` (and @aws-sdk/s3-request-presigner ' +
-            'for signed URLs). Underlying error: ' +
+            'Run `pnpm add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner`. ' +
+            'Underlying error: ' +
             (e instanceof Error ? e.message : String(e))
         );
       }
@@ -213,9 +227,8 @@ class S3Backend implements StorageBackend {
 
   async upload(key: string, bytes: Uint8Array, contentType: string): Promise<StoredFile> {
     const sane = sanitizeKey(key);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mod = (await import(/* @vite-ignore */ '@aws-sdk/client-s3' as string)) as any;
-    const { PutObjectCommand } = mod;
+    const mod = await loadAwsModule('@aws-sdk/client-s3');
+    const PutObjectCommand = mod.PutObjectCommand as new (cfg: unknown) => unknown;
     const client = (await this.getClient()) as { send: (cmd: unknown) => Promise<unknown> };
     await client.send(
       new PutObjectCommand({
@@ -229,9 +242,8 @@ class S3Backend implements StorageBackend {
   }
 
   async download(key: string): Promise<Uint8Array> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mod = (await import(/* @vite-ignore */ '@aws-sdk/client-s3' as string)) as any;
-    const { GetObjectCommand } = mod;
+    const mod = await loadAwsModule('@aws-sdk/client-s3');
+    const GetObjectCommand = mod.GetObjectCommand as new (cfg: unknown) => unknown;
     const client = (await this.getClient()) as { send: (cmd: unknown) => Promise<unknown> };
     const res = (await client.send(
       new GetObjectCommand({ Bucket: this.bucket, Key: this.fullKey(key) })
@@ -243,20 +255,16 @@ class S3Backend implements StorageBackend {
   }
 
   async signedUrl(key: string, ttlSeconds: number): Promise<string> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const s3Mod = (await import(/* @vite-ignore */ '@aws-sdk/client-s3' as string)) as any;
-    let presignerMod: { getSignedUrl: (...args: unknown[]) => Promise<string> };
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      presignerMod = (await import(/* @vite-ignore */ '@aws-sdk/s3-request-presigner' as string)) as any;
-    } catch (e) {
-      throw new Error(
-        '@aws-sdk/s3-request-presigner is required for signedUrl on the s3 backend.'
-      );
-    }
-    const { GetObjectCommand } = s3Mod;
-    const client = (await this.getClient()) as object;
-    return presignerMod.getSignedUrl(
+    const s3Mod = await loadAwsModule('@aws-sdk/client-s3');
+    const presignerMod = await loadAwsModule('@aws-sdk/s3-request-presigner');
+    const GetObjectCommand = s3Mod.GetObjectCommand as new (cfg: unknown) => unknown;
+    const getSignedUrl = presignerMod.getSignedUrl as (
+      client: unknown,
+      cmd: unknown,
+      opts: { expiresIn: number }
+    ) => Promise<string>;
+    const client = await this.getClient();
+    return getSignedUrl(
       client,
       new GetObjectCommand({ Bucket: this.bucket, Key: this.fullKey(key) }),
       { expiresIn: ttlSeconds }
@@ -264,9 +272,8 @@ class S3Backend implements StorageBackend {
   }
 
   async delete(key: string): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mod = (await import(/* @vite-ignore */ '@aws-sdk/client-s3' as string)) as any;
-    const { DeleteObjectCommand } = mod;
+    const mod = await loadAwsModule('@aws-sdk/client-s3');
+    const DeleteObjectCommand = mod.DeleteObjectCommand as new (cfg: unknown) => unknown;
     const client = (await this.getClient()) as { send: (cmd: unknown) => Promise<unknown> };
     await client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: this.fullKey(key) }));
   }

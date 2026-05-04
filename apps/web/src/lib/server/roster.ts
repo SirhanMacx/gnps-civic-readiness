@@ -154,7 +154,7 @@ export async function getCohortRoster(opts: {
 
   const { data: studentsRaw, error: eStu } = await studentsQuery;
   if (eStu) throw new Error(`students.select failed: ${eStu.message}`);
-  const students = (studentsRaw ?? []) as StudentRow[];
+  const students = (studentsRaw ?? []) as unknown as StudentRow[];
   if (students.length === 0) return [];
 
   const studentIds = students.map((s) => s.id);
@@ -163,7 +163,7 @@ export async function getCohortRoster(opts: {
   //    are interesting for current credits; we pass them all through and let
   //    the rule engine ignore the rest).
   // Raw SQL so we can inner-join — the db.ts facade doesn't model joins.
-  const enrollRaw = await sql()<
+  const enrollRaw = await sql<
     {
       student_id: string;
       course_id: number;
@@ -196,7 +196,7 @@ export async function getCohortRoster(opts: {
     .select('student_id, exam_code, score, safety_net_applied')
     .in('student_id', studentIds);
   if (eReg) throw new Error(`regents_scores.select failed: ${eReg.message}`);
-  const regents = (regentsRaw ?? []) as RegentsRow[];
+  const regents = (regentsRaw ?? []) as unknown as RegentsRow[];
 
   // 4) awarded submissions
   const { data: awardedRaw, error: eAw } = await sb
@@ -205,7 +205,7 @@ export async function getCohortRoster(opts: {
     .eq('status', 'awarded')
     .in('student_id', studentIds);
   if (eAw) throw new Error(`pathway_submissions.select failed: ${eAw.message}`);
-  const awarded = (awardedRaw ?? []) as AwardedRow[];
+  const awarded = (awardedRaw ?? []) as unknown as AwardedRow[];
 
   // Group helpers
   const enrollByStudent = new Map<string, EnrollmentRow[]>();

@@ -157,6 +157,12 @@ export async function teacherPush(
     `;
     const submissionId = inserted[0]!.id;
 
+    const auditPayload = JSON.stringify({
+      pathway_type: data.pathwayType,
+      points: directAward ? pointsAfterCap : data.pointsAwarded,
+      class_label: data.classLabel,
+      domain_tags: data.domainTags
+    });
     await sql`
       insert into public.audit_log (
         actor_id, actor_kind, action, target_type, target_id, data
@@ -166,12 +172,7 @@ export async function teacherPush(
         ${directAward ? 'teacher_awarded_pathway_points' : 'teacher_proposed_pathway_for_review'},
         'pathway_submissions',
         ${String(submissionId)},
-        ${{
-          pathway_type: data.pathwayType,
-          points: directAward ? pointsAfterCap : data.pointsAwarded,
-          class_label: data.classLabel,
-          domain_tags: data.domainTags
-        }}::jsonb
+        ${auditPayload}::jsonb
       )
     `;
 

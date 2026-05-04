@@ -106,7 +106,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
       if (efErr) {
         errors.push(`evidence_files query failed: ${efErr.message}`);
       }
-      const evRows = ((rows ?? []) as DbEvidenceRow[]).filter((r) => r.storage_path);
+      const evRows = ((rows ?? []) as unknown as DbEvidenceRow[]).filter((r) => r.storage_path);
       const storage = getStorage();
       for (const r of evRows) {
         const studentId = submissionToStudent.get(r.submission_id);

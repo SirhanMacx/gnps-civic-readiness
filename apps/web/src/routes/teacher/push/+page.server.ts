@@ -1,7 +1,7 @@
 import type { Actions } from './$types.js';
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { requireRole } from '$server/auth.js';
-import { teacherPush, TeacherPushSchema, type TeacherPushInput } from '$server/teacher-push.js';
+import { teacherPush, TeacherPushSchema } from '$server/teacher-push.js';
 
 export const actions: Actions = {
   default: async (event) => {
@@ -20,13 +20,13 @@ export const actions: Actions = {
     const domainTags = form.getAll('domainTags').map(String);
 
     const parsed = TeacherPushSchema.safeParse({
-      pathwayType: form.get('pathwayType'),
+      pathwayType: String(form.get('pathwayType') ?? ''),
       studentIds,
       pointsAwarded: Number(form.get('pointsAwarded')),
-      notes: form.get('notes') ?? '',
+      notes: String(form.get('notes') ?? ''),
       domainTags,
-      classLabel: form.get('classLabel') ?? ''
-    } satisfies TeacherPushInput);
+      classLabel: String(form.get('classLabel') ?? '')
+    });
 
     if (!parsed.success) {
       return fail(400, {

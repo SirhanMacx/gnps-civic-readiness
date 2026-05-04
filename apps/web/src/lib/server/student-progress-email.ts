@@ -51,7 +51,7 @@ async function buildProgress(studentId: string): Promise<StudentProgress | null>
   const sb = supabaseAdmin();
 
   // Course enrollments need a join into course_catalog — use raw SQL.
-  const enrollment = await sql()<
+  const enrollment = await sql<
     {
       credit_status: string;
       counts_for: string[] | null;

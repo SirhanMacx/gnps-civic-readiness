@@ -108,7 +108,7 @@ export async function getStudentDetail(studentId: string): Promise<StudentDetail
   // 2) Course enrollment + course_catalog
   // Direct-Postgres facade doesn't support embedded joins; use raw SQL so
   // we can pull catalog columns alongside the enrollment row in one query.
-  const enrRaw = await sql()<
+  const enrRaw = await sql<
     {
       student_id: string;
       course_id: number;
@@ -251,7 +251,7 @@ export async function getStudentDetail(studentId: string): Promise<StudentDetail
   let auditRaw: AuditDbRow[] = [];
   try {
     if (submissionIds.length > 0) {
-      auditRaw = (await sql()<AuditDbRow[]>`
+      auditRaw = (await sql<AuditDbRow[]>`
         select id, occurred_at, actor_kind, action, target_type, target_id, data
         from audit_log
         where (target_type = 'students' and target_id = ${studentId})
@@ -260,7 +260,7 @@ export async function getStudentDetail(studentId: string): Promise<StudentDetail
         limit 20
       `) as unknown as AuditDbRow[];
     } else {
-      auditRaw = (await sql()<AuditDbRow[]>`
+      auditRaw = (await sql<AuditDbRow[]>`
         select id, occurred_at, actor_kind, action, target_type, target_id, data
         from audit_log
         where target_type = 'students' and target_id = ${studentId}

@@ -42,11 +42,9 @@ import { env } from '$env/dynamic/private';
 let cached: Sql | null = null;
 
 /**
- * The lazy-initialized postgres tagged-template client. The first call reads
- * `DATABASE_URL`, the rest hand back the cached client. Each app process
- * keeps a single connection pool.
+ * Internal: build (or fetch) the singleton postgres client.
  */
-export function sql(): Sql {
+function getClient(): Sql {
   if (cached) return cached;
   const url = env.DATABASE_URL;
   if (!url) {
@@ -64,6 +62,44 @@ export function sql(): Sql {
   });
   return cached;
 }
+
+/**
+ * The postgres.js tagged-template client. Two valid call shapes:
+ *
+ *   await sql\`select 1\`                          // tagged template
+ *   await sql<{ id: number }[]>\`select id ...\`    // typed-result tagged template
+ *
+ * Internally cached. Created on first reference. Safe to call from anywhere
+ * the SvelteKit `$env/dynamic/private` is wired (i.e. server modules only).
+ *
+ * Implementation: a Proxy that lazily materializes the postgres client on
+ * the first method/call access. We type-cast to `Sql` so call sites get full
+ * typing for tagged-template invocations.
+ *
+ * Most call sites use `sql\`...\`` directly. The internal facade in this
+ * module uses `getSql()` to grab the underlying client for `unsafe(...)` calls.
+ */
+export function getSql(): Sql {
+  return getClient();
+}
+
+export const sql: Sql = new Proxy(
+  function sqlProxy() {
+    return getClient();
+  } as unknown as Sql,
+  {
+    apply(_target, _thisArg, args: unknown[]) {
+      const c = getClient() as unknown as (...a: unknown[]) => unknown;
+      return c(...args);
+    },
+    get(_target, prop, _receiver) {
+      const c = getClient() as unknown as Record<string | symbol, unknown>;
+      const v = c[prop];
+      if (typeof v === 'function') return (v as (...a: unknown[]) => unknown).bind(c);
+      return v;
+    }
+  }
+) as Sql;
 
 // ---------------------------------------------------------------------------
 // Identifier validation
@@ -329,7 +365,7 @@ function makeSelect(init: SelectInit): SelectChain {
     },
     async maybeSingle() {
       try {
-        const s = sql();
+        const s = getSql();
         const q = buildSelectSql();
         const rows = (await s.unsafe(q.text, q.params as never[])) as unknown as Record<string, unknown>[];
         if (rows.length === 0) return { data: null, error: null };
@@ -349,7 +385,7 @@ function makeSelect(init: SelectInit): SelectChain {
     },
     async single() {
       try {
-        const s = sql();
+        const s = getSql();
         const q = buildSelectSql();
         const rows = (await s.unsafe(q.text, q.params as never[])) as unknown as Record<string, unknown>[];
         if (rows.length !== 1) {
@@ -369,7 +405,7 @@ function makeSelect(init: SelectInit): SelectChain {
     then(onF, onR) {
       const run = async (): Promise<QueryResult<Record<string, unknown>[]>> => {
         try {
-          const s = sql();
+          const s = getSql();
           if (init.count?.exact) {
             const c = buildCountSql();
             const cRows = (await s.unsafe(c.text, c.params as never[])) as unknown as { c: number }[];
@@ -451,7 +487,7 @@ function makeInsert(table: string, payload: Record<string, unknown> | readonly R
             error: new DbError('insert(...).single() called with no rows', 'PGRST101')
           };
         }
-        const s = sql();
+        const s = getSql();
         const q = buildInsertSql(table, [rows[0]!], returningCols);
         const out = (await s.unsafe(q.text, q.params as never[])) as unknown as Record<string, unknown>[];
         if (out.length !== 1) {
@@ -472,7 +508,7 @@ function makeInsert(table: string, payload: Record<string, unknown> | readonly R
       const run = async (): Promise<QueryResult<Record<string, unknown>[]>> => {
         try {
           if (rows.length === 0) return { data: [], error: null };
-          const s = sql();
+          const s = getSql();
           const q = buildInsertSql(table, rows, returningCols);
           const out = (await s.unsafe(q.text, q.params as never[])) as unknown as Record<string, unknown>[];
           return { data: out, error: null };
@@ -552,7 +588,7 @@ function makeUpdate(table: string, patch: Record<string, unknown>): UpdateChain 
     },
     async single() {
       try {
-        const s = sql();
+        const s = getSql();
         const q = buildUpdateSql(table, patch, filters, returningCols ?? '*');
         const out = (await s.unsafe(q.text, q.params as never[])) as unknown as Record<string, unknown>[];
         if (out.length !== 1) {
@@ -572,7 +608,7 @@ function makeUpdate(table: string, patch: Record<string, unknown>): UpdateChain 
     then(onF, onR) {
       const run = async (): Promise<QueryResult<Record<string, unknown>[]>> => {
         try {
-          const s = sql();
+          const s = getSql();
           const q = buildUpdateSql(table, patch, filters, returningCols);
           const out = (await s.unsafe(q.text, q.params as never[])) as unknown as Record<string, unknown>[];
           return { data: out, error: null };
@@ -613,7 +649,7 @@ function makeDelete(table: string): DeleteChain {
     then(onF, onR) {
       const run = async (): Promise<QueryResult<Record<string, unknown>[]>> => {
         try {
-          const s = sql();
+          const s = getSql();
           const t = quoteIdent(table, 'table');
           const where = compileWhere(filters);
           await s.unsafe(`DELETE FROM ${t} ${where.text}`, where.params as never[]);
@@ -711,7 +747,7 @@ function makeUpsert(
             error: new DbError('upsert(...).single() called with no rows', 'PGRST101')
           };
         }
-        const s = sql();
+        const s = getSql();
         const q = buildUpsertSql(table, [rows[0]!], conflictCols, returningCols);
         const out = (await s.unsafe(q.text, q.params as never[])) as unknown as Record<string, unknown>[];
         if (out.length !== 1) {
@@ -732,7 +768,7 @@ function makeUpsert(
       const run = async (): Promise<QueryResult<Record<string, unknown>[]>> => {
         try {
           if (rows.length === 0) return { data: [], error: null };
-          const s = sql();
+          const s = getSql();
           const q = buildUpsertSql(table, rows, conflictCols, returningCols);
           const out = (await s.unsafe(q.text, q.params as never[])) as unknown as Record<string, unknown>[];
           return { data: out, error: null };

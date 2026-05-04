@@ -78,11 +78,44 @@ vi.mock('$server/supabase.js', () => ({
   }),
 }));
 
+// The post-Supabase roster.ts uses raw `sql\`...\`` to inner-join
+// course_enrollment × course_catalog. We stub that to read from the
+// `course_enrollment` and `course_catalog` rows in tableState — the tests
+// flatten the catalog into the embedded `course_catalog` shape, so we
+// translate that into the joined-row shape the new implementation expects.
+vi.mock('$server/db.js', () => {
+  function tag(template: TemplateStringsArray, ...values: unknown[]): Promise<unknown> {
+    const text = template.join('?').toLowerCase();
+    if (text.includes('from course_enrollment') && text.includes('course_catalog')) {
+      const ids = values[0] as string[];
+      const rows: Array<Record<string, unknown>> = [];
+      for (const e of tableState.course_enrollment.rows) {
+        if (!ids.includes(e.student_id)) continue;
+        const catalog = e.course_catalog as { credits?: number; counts_for?: string[] } | undefined;
+        rows.push({
+          student_id: e.student_id,
+          course_id: e.course_id,
+          credit_status: e.credit_status,
+          credits: catalog?.credits ?? 0,
+          counts_for: catalog?.counts_for ?? [],
+        });
+      }
+      return Promise.resolve(rows);
+    }
+    return Promise.resolve([]);
+  }
+  return {
+    sql: tag,
+    getSql: () => tag,
+    db: { from: () => ({ select: () => ({}) }) },
+  };
+});
+
 vi.mock('$env/dynamic/private', () => ({
-  env: { SUPABASE_SERVICE_ROLE_KEY: 'srk-test' },
+  env: {},
 }));
 vi.mock('$env/dynamic/public', () => ({
-  env: { PUBLIC_SUPABASE_URL: 'https://test.supabase.co' },
+  env: {},
 }));
 
 // Import AFTER mocks.

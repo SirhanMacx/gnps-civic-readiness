@@ -51,7 +51,7 @@ export async function issueAuthToken(
   const token = randomBytes(TOKEN_BYTES).toString('hex');
   const tokenHash = sha256Hex(token);
   const expires = new Date(Date.now() + TTL_MINUTES * 60_000);
-  await sql()`
+  await sql`
     insert into auth_tokens (email, token_hash, expires_at, ip, user_agent)
     values (${email}, ${tokenHash}, ${expires.toISOString()}::timestamptz, ${ip ?? null}, ${userAgent ?? null})
   `;
@@ -69,7 +69,7 @@ export async function issueAuthToken(
 export async function consumeAuthToken(token: string): Promise<string | null> {
   if (typeof token !== 'string' || token.length === 0) return null;
   const tokenHash = sha256Hex(token);
-  const rows = (await sql()<{ email: string }[]>`
+  const rows = await sql<{ email: string }[]>`
     with consumed as (
       update auth_tokens
       set consumed_at = now()
@@ -79,7 +79,7 @@ export async function consumeAuthToken(token: string): Promise<string | null> {
       returning email
     )
     select email from consumed
-  `) as unknown as { email: string }[];
+  `;
   if (rows.length === 0) return null;
   return rows[0]!.email;
 }

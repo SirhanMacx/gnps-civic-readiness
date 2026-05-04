@@ -1,6 +1,6 @@
 // See https://kit.svelte.dev/docs/types#app for documentation.
 
-export type StaffRole = 'counselor' | 'scrc_member' | 'admin';
+export type StaffRole = 'counselor' | 'scrc_member' | 'admin' | 'teacher';
 
 export interface StaffUser {
   id: string;

@@ -47,43 +47,40 @@ vi.mock('$server/supabase.js', () => ({
   })
 }));
 
-// Stub the postgres client used by auth-tokens.ts. The auth-tokens helpers
-// invoke `sql()\`insert ...\`` and `sql()\`with consumed as (update ...)
-// returning email\``; we intercept by sniffing the SQL text and acting on
-// the in-memory `fakeAuthTokens` array.
+// Stub the postgres tagged-template client used by auth-tokens.ts. The
+// auth-tokens helpers invoke `sql\`insert ...\`` and `sql\`with consumed as
+// (update ...) returning email\``; we intercept by sniffing the SQL text and
+// acting on the in-memory `fakeAuthTokens` array.
 vi.mock('$server/db.js', () => {
-  function makeTaggedTemplate() {
-    return (template: TemplateStringsArray, ...values: unknown[]) => {
-      const text = template.join('?').toLowerCase();
-      // INSERT path (issueAuthToken).
-      if (text.includes('insert into auth_tokens')) {
-        const [email, tokenHash, expiresIso] = values as [string, string, string];
-        fakeAuthTokens.push({
-          email,
-          token_hash: tokenHash,
-          expires_at: new Date(expiresIso).getTime(),
-          consumed_at: null
-        });
-        return Promise.resolve([] as unknown[]);
-      }
-      // CONSUME path (consumeAuthToken) — single-row CTE update.
-      if (text.includes('update auth_tokens') && text.includes('returning email')) {
-        const tokenHash = values[0] as string;
-        const now = Date.now();
-        const row = fakeAuthTokens.find(
-          (r) => r.token_hash === tokenHash && r.consumed_at === null && r.expires_at > now
-        );
-        if (!row) return Promise.resolve([] as { email: string }[]);
-        row.consumed_at = now;
-        return Promise.resolve([{ email: row.email }] as { email: string }[]);
-      }
-      // No-op for anything else this test exercises.
-      return Promise.resolve([] as unknown[]);
-    };
+  function tag(template: TemplateStringsArray, ...values: unknown[]): Promise<unknown> {
+    const text = template.join('?').toLowerCase();
+    // INSERT path (issueAuthToken).
+    if (text.includes('insert into auth_tokens')) {
+      const [email, tokenHash, expiresIso] = values as [string, string, string];
+      fakeAuthTokens.push({
+        email,
+        token_hash: tokenHash,
+        expires_at: new Date(expiresIso).getTime(),
+        consumed_at: null
+      });
+      return Promise.resolve([]);
+    }
+    // CONSUME path (consumeAuthToken) — single-row CTE update.
+    if (text.includes('update auth_tokens') && text.includes('returning email')) {
+      const tokenHash = values[0] as string;
+      const now = Date.now();
+      const row = fakeAuthTokens.find(
+        (r) => r.token_hash === tokenHash && r.consumed_at === null && r.expires_at > now
+      );
+      if (!row) return Promise.resolve([] as { email: string }[]);
+      row.consumed_at = now;
+      return Promise.resolve([{ email: row.email }] as { email: string }[]);
+    }
+    return Promise.resolve([]);
   }
-  const tag = makeTaggedTemplate();
   return {
-    sql: () => tag,
+    sql: tag,
+    getSql: () => tag,
     db: { from: () => ({ select: () => ({}) }) }
   };
 });

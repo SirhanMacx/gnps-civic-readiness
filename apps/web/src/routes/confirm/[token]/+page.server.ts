@@ -37,7 +37,7 @@ export const load: PageServerLoad = async ({ params, url }): Promise<LoadResult>
 
   let log: LogRow | null = null;
   try {
-    const rows = (await sql()<LogRow[]>`
+    const rows = (await sql<LogRow[]>`
       select
         hl.id,
         hl.hours,

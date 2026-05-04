@@ -122,7 +122,7 @@ export async function loadCohort(gradYear?: number): Promise<CohortData> {
   if (stuErr) {
     throw new Error(`students fetch failed: ${stuErr.message}`);
   }
-  const dbStudents = (studentsRaw ?? []) as DbStudent[];
+  const dbStudents = (studentsRaw ?? []) as unknown as DbStudent[];
   const studentIds = dbStudents.map((s) => s.id);
 
   if (studentIds.length === 0) {
@@ -164,11 +164,11 @@ export async function loadCohort(gradYear?: number): Promise<CohortData> {
   if (enrRes.error) throw new Error(`course_enrollment fetch failed: ${enrRes.error.message}`);
   if (catRes.error) throw new Error(`course_catalog fetch failed: ${catRes.error.message}`);
 
-  const dbSubs = (subRes.data ?? []) as DbSubmission[];
-  const dbReg = (regRes.data ?? []) as DbRegents[];
-  const dbEnr = (enrRes.data ?? []) as DbEnrollment[];
-  const dbCat = (catRes.data ?? []) as DbCourse[];
-  const dbAudit = (auditRes.data ?? []) as {
+  const dbSubs = (subRes.data ?? []) as unknown as DbSubmission[];
+  const dbReg = (regRes.data ?? []) as unknown as DbRegents[];
+  const dbEnr = (enrRes.data ?? []) as unknown as DbEnrollment[];
+  const dbCat = (catRes.data ?? []) as unknown as DbCourse[];
+  const dbAudit = (auditRes.data ?? []) as unknown as {
     occurred_at: string;
     action: string;
     actor_kind: string;
