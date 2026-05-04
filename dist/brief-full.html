@@ -33,6 +33,9 @@ Readiness Portal — IT Handoff Brief</h1>
 <strong>From:</strong> Social Studies Department <strong>Re:</strong>
 NYS Seal of Civic Readiness tracking portal — integration asks
 <strong>Date:</strong> May 4, 2026</p>
+<p><strong>Live demo:</strong> https://gnps-civic-readiness.vercel.app
+<strong>Source code (MIT):</strong>
+https://github.com/SirhanMacx/gnps-civic-readiness</p>
 <hr />
 <h2 id="what-this-is">What this is</h2>
 <p>An open-source web portal for tracking the New York State Seal of
@@ -227,6 +230,104 @@ Integration option A (recommended) is just a DNS CNAME alongside
 existing Finalsite hosting.</li>
 </ul>
 <hr />
+<h2 id="infinite-campus-integration-demonstrated-end-to-end">Infinite
+Campus integration — demonstrated end-to-end</h2>
+<p>The system already accepts IC data and auto-counts the Civic
+Knowledge column. The proof is on the live demo right now.</p>
+<p><strong>The format we need from IC</strong> (one row per student ×
+course-or-exam):</p>
+<pre><code>student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit
+GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2025-2026,passed
+GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2026-06-15,87
+GN20275511,Chen,David,2027,course,AP_US_GOV,2026-2027,passed
+…</code></pre>
+<p>A counselor (or admin) drops this CSV at <code>/admin/import</code>
+(UI is live now). The system parses, validates, shows a diff (new /
+updated / unchanged), and commits. From that moment forward, the cohort
+roster auto-populates.</p>
+<p><strong>Demonstrated with a 5-student sample class (uploaded May 4,
+2026 to validate the pipeline):</strong></p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Student</th>
+<th>SS credits passed</th>
+<th>Advanced SS courses</th>
+<th>Regents scored</th>
+<th>Auto-counted Knowledge points</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>David Chen (GN20275511)</td>
+<td>4</td>
+<td>0</td>
+<td>Global II 72 (P) + US History 91 (M)</td>
+<td><strong>3.5</strong></td>
+<td>Knowledge column ≥2 ✓</td>
+</tr>
+<tr>
+<td>Maya Goldberg (GN20271234)</td>
+<td>2</td>
+<td>1</td>
+<td>Global II 87 (M)</td>
+<td><strong>2.0</strong></td>
+<td>Knowledge column ≥2 ✓</td>
+</tr>
+<tr>
+<td>Aanya Patel (GN20274432)</td>
+<td>2</td>
+<td>2</td>
+<td>Global II 93 (M)</td>
+<td><strong>2.5</strong></td>
+<td>Knowledge column ≥2 ✓</td>
+</tr>
+<tr>
+<td>Sofia Rivera (GN20277890)</td>
+<td>4</td>
+<td>1</td>
+<td>Global II 89 (M) + US History 86 (M)</td>
+<td><strong>4.5</strong></td>
+<td>Knowledge column ≥2 ✓</td>
+</tr>
+<tr>
+<td>Sean O’Hara (GN20283344)</td>
+<td>1</td>
+<td>0</td>
+<td>(none yet)</td>
+<td>0.0</td>
+<td>underclassman — auto-counts as evidence accumulates</td>
+</tr>
+</tbody>
+</table>
+<p>These point totals were computed by the system from the IC CSV alone
+— no student input. Four out of five sample students have already
+cleared the Civic Knowledge column requirement just from coursework +
+Regents performance. They now only need to accumulate ≥2 Civic
+Participation points (service hours, projects, etc.) via the public
+submission forms.</p>
+<p><strong>This is the value of the auto-populate.</strong> Counselors
+don’t re-key data that the SIS already has, and students don’t have to
+claim points they’ve already earned in class.</p>
+<p><strong>Phase 1 path (today):</strong> counselor exports a custom
+report from IC quarterly, uploads at <code>/admin/import</code>. Free,
+works now, no IT integration project needed.</p>
+<p><strong>Phase 2 path (when IT is ready):</strong> OneRoster API or
+nightly SFTP-export job replaces the manual upload. Same destination
+tables, same point math, just automated.</p>
+<p>A sample CSV in the exact format is committed to the repo at <a
+href="https://github.com/SirhanMacx/gnps-civic-readiness/blob/main/docs/sample-ic-data.csv">docs/sample-ic-data.csv</a>
+— IT can use it as a target for the IC export query.</p>
+<hr />
 <h2 id="why-this-benefits-gnps">Why this benefits GNPS</h2>
 <ol type="1">
 <li><strong>Closes a competitive gap.</strong> Peer Long Island
@@ -249,11 +350,12 @@ does, Phase 2 promotion is well-scoped.</li>
 <hr />
 <h2 id="repository-contact">Repository &amp; contact</h2>
 <ul>
-<li><strong>GitHub:</strong>
-<code>github.com/&lt;author&gt;/civic-readiness-portal</code> (private
-during development; public on launch approval; transferable to
-GNPS-owned org)</li>
-<li><strong>License:</strong> MIT</li>
+<li><strong>Live demo:</strong> https://gnps-civic-readiness.vercel.app
+(try <code>/about</code>, <code>/submit</code>,
+<code>/submit/service</code>)</li>
+<li><strong>Source code:</strong>
+https://github.com/SirhanMacx/gnps-civic-readiness — MIT-licensed,
+transferable to a GNPS-owned org on approval</li>
 <li><strong>Contact:</strong> Jon — Social Studies Department, Great
 Neck Public Schools</li>
 </ul>

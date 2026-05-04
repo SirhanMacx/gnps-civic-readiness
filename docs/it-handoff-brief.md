@@ -5,6 +5,9 @@
 **Re:** NYS Seal of Civic Readiness tracking portal — integration asks
 **Date:** May 4, 2026
 
+**Live demo:** https://gnps-civic-readiness.vercel.app
+**Source code (MIT):** https://github.com/SirhanMacx/gnps-civic-readiness
+
 ---
 
 ## What this is
@@ -84,6 +87,44 @@ GNPS scale (~6,800 students; ~412 per graduating class) fits comfortably within 
 
 ---
 
+## Infinite Campus integration — demonstrated end-to-end
+
+The system already accepts IC data and auto-counts the Civic Knowledge column. The proof is on the live demo right now.
+
+**The format we need from IC** (one row per student × course-or-exam):
+
+```
+student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit
+GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2025-2026,passed
+GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2026-06-15,87
+GN20275511,Chen,David,2027,course,AP_US_GOV,2026-2027,passed
+…
+```
+
+A counselor (or admin) drops this CSV at `/admin/import` (UI is live now). The system parses, validates, shows a diff (new / updated / unchanged), and commits. From that moment forward, the cohort roster auto-populates.
+
+**Demonstrated with a 5-student sample class (uploaded May 4, 2026 to validate the pipeline):**
+
+| Student | SS credits passed | Advanced SS courses | Regents scored | Auto-counted Knowledge points | Status |
+|---|---|---|---|---|---|
+| David Chen (GN20275511) | 4 | 0 | Global II 72 (P) + US History 91 (M) | **3.5** | Knowledge column ≥2 ✓ |
+| Maya Goldberg (GN20271234) | 2 | 1 | Global II 87 (M) | **2.0** | Knowledge column ≥2 ✓ |
+| Aanya Patel (GN20274432) | 2 | 2 | Global II 93 (M) | **2.5** | Knowledge column ≥2 ✓ |
+| Sofia Rivera (GN20277890) | 4 | 1 | Global II 89 (M) + US History 86 (M) | **4.5** | Knowledge column ≥2 ✓ |
+| Sean O'Hara (GN20283344) | 1 | 0 | (none yet) | 0.0 | underclassman — auto-counts as evidence accumulates |
+
+These point totals were computed by the system from the IC CSV alone — no student input. Four out of five sample students have already cleared the Civic Knowledge column requirement just from coursework + Regents performance. They now only need to accumulate ≥2 Civic Participation points (service hours, projects, etc.) via the public submission forms.
+
+**This is the value of the auto-populate.** Counselors don't re-key data that the SIS already has, and students don't have to claim points they've already earned in class.
+
+**Phase 1 path (today):** counselor exports a custom report from IC quarterly, uploads at `/admin/import`. Free, works now, no IT integration project needed.
+
+**Phase 2 path (when IT is ready):** OneRoster API or nightly SFTP-export job replaces the manual upload. Same destination tables, same point math, just automated.
+
+A sample CSV in the exact format is committed to the repo at [docs/sample-ic-data.csv](https://github.com/SirhanMacx/gnps-civic-readiness/blob/main/docs/sample-ic-data.csv) — IT can use it as a target for the IC export query.
+
+---
+
 ## Why this benefits GNPS
 
 1. **Closes a competitive gap.** Peer Long Island districts (Seaford, 3 Village, Connetquot) already publish Seal of Civic Readiness pages. GNPS has no program; this fixes that on a fast timeline.
@@ -95,8 +136,8 @@ GNPS scale (~6,800 students; ~412 per graduating class) fits comfortably within 
 
 ## Repository & contact
 
-- **GitHub:** `github.com/<author>/civic-readiness-portal` (private during development; public on launch approval; transferable to GNPS-owned org)
-- **License:** MIT
+- **Live demo:** https://gnps-civic-readiness.vercel.app (try `/about`, `/submit`, `/submit/service`)
+- **Source code:** https://github.com/SirhanMacx/gnps-civic-readiness — MIT-licensed, transferable to a GNPS-owned org on approval
 - **Contact:** Jon — Social Studies Department, Great Neck Public Schools
 
 The full design document (architecture, data model, user flows, NYSED compliance mapping, repository structure, risks) is available as a 27-page companion PDF/DOCX.
