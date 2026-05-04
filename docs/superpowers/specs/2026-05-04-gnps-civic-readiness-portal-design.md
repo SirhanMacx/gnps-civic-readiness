@@ -138,7 +138,7 @@ Browser ──── HTTPS ────▶  civicseal-gnps.vercel.app  (or subdo
 | **Database** — Supabase Postgres | Supabase free tier (500 MB DB, 1 GB file storage) | $0 | Students, submissions, evidence, audit log, course catalog |
 | **File storage** — Supabase Storage | Same | $0 | Reflection essays, artifact uploads, supervisor confirmation receipts |
 | **Auth** — Supabase Auth (magic link) | Same | $0 | Counselor / SCRC committee / admin login. No student auth in Phase 1. |
-| **Email** — Resend | Resend free tier (3,000/mo) | $0 | Supervisor confirmation links, counselor notifications |
+| **Email** — Resend | Resend free tier (3,000/mo) | $0 | Supervisor confirmation links, counselor notifications. **Phase 1 sends from a Resend-managed verified domain** (e.g. `civicseal-gnps@resend.dev`) until item #6 of the IT-handoff brief is completed (SPF/DKIM on greatneck.k12.ny.us subdomain). Email body explains the unfamiliar sender. |
 | **Domain** — Custom subdomain | GNPS DNS or Vercel-provided | $0 | civicseal.greatneck.k12.ny.us |
 
 ### 3.2 Phase 2 architecture (after IT integration)
@@ -193,11 +193,18 @@ regents_scores
   ├── safety_net_applied (bool, IEP/504 alternate scoring)
   └── proficiency_level (computed: 'mastery' if ≥85, 'proficiency' if 65-84, 'safety_net_pass' if 55-64 + flag)
 
-pathway_submissions  ◀── the central entity
+pathway_submissions  ◀── central entity for pathways with submitted evidence
+                       (participation + research projects).
+                       SIS-derived pathways do NOT have rows here — they are
+                       computed at read time from course_enrollment + regents_scores
+                       (see §4.2 SIS-derived pathway lifecycle).
   ├── id, student_id (fk)
   ├── pathway_type (enum: research_project, hs_civic_project,
-  │                       service_learning, civic_elective,
+  │                       service_learning, civic_elective_essay,
   │                       wbl_extracurr, ms_capstone, hs_capstone)
+  │   note: civic_elective_essay covers the application-of-knowledge essay
+  │         component of pathway 2c; the proficiency-grade component is
+  │         computed from course_enrollment, not stored here.
   ├── status (enum: draft, proposed, topic_approved, in_progress,
   │                 submitted, scored, awarded, rejected, revoked)
   ├── points_awarded (decimal, nullable)
@@ -289,16 +296,18 @@ The audit_log is **append-only** — its retention policy is "indefinite while s
                        [scored / awarded]
 ```
 
-**SIS-derived pathways** (`pathway_4ss_credits`, `pathway_regents_*`, `pathway_advanced_ss`, `pathway_civic_elective` proficiency component):
+**SIS-derived pathways** (1a 4-SS-credits, 1b/1c Regents proficiency, 1d advanced SS, 2c civic-elective proficiency component):
 
 ```
-[CSV import or live IC sync] → [matched to student by id+grad_year] → [points auto-calculated]
-                                                  │
-                                                  ▼
-                                            [counselor sees on roster, no review]
+[CSV import or live IC sync] → [course_enrollment + regents_scores rows] → [points computed at read time]
+                                                                                      │
+                                                                                      ▼
+                                                                        [appears on roster, no review]
 ```
 
-The civic-elective pathway (2c) splits across systems: the proficiency *grade* comes from IC, but the *application-of-knowledge essay* is an evidence file the student submits — only when both halves exist do points award.
+**These pathways have no `pathway_submissions` row.** They are evaluated by querying `course_enrollment` and `regents_scores` against `course_catalog.counts_for` and the Regents proficiency thresholds. The system represents them in API responses as virtual pathway records (with stable computed IDs like `sis:1a:GN20271234`) so the frontend can render them in the same roster UI as evidence-backed pathways without special-casing.
+
+The civic-elective pathway (2c) splits across systems: the proficiency *grade* component comes from IC (computed), but the *application-of-knowledge essay* component is an evidence file the student submits and is stored as a `civic_elective_essay` row in `pathway_submissions`. Points award only when both halves exist for the same course-year.
 
 ### 4.3 Rules baked into the data layer
 
@@ -390,7 +399,7 @@ The per-student PDF is the document a NYSED auditor would review.
 
 ### 5.3 Supervisor confirmation flow
 
-1. Supervisor receives email from `civicseal@greatneck.k12.ny.us`
+1. Supervisor receives email. In Phase 1, the sender is a Resend-managed verified address (the email body identifies the program and links back to the GNPS-themed portal so recipients can sanity-check legitimacy). In Phase 2, sender becomes `civicseal@greatneck.k12.ny.us` once SPF/DKIM are added.
 2. Email body: brief context + two buttons (`Confirm 8 hours` / `Hours don't match`)
 3. Supervisor clicks → lands on a no-auth page with the signed token
 4. Server validates token, marks `hours_log` row `confirmed`, records IP + timestamp in audit log
