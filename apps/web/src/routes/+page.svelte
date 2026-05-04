@@ -1,5 +1,5 @@
 <svelte:head>
-  <title>NYS Seal of Civic Readiness — Great Neck Public Schools</title>
+  <title>NYS Seal of Civic Readiness · Great Neck Public Schools</title>
 </svelte:head>
 
 <section class="mb-12">
@@ -9,8 +9,8 @@
     A transcript-and-diploma distinction recognizing students who demonstrate civic knowledge, skills, mindsets, and experiences across grades 9–12. Use this portal to <strong>submit your hours, projects, and reflections</strong> and <strong>track your progress</strong> toward earning the Seal at graduation.
   </p>
   <div class="flex flex-wrap gap-3 mt-6">
-    <a href="/submit" class="inline-block bg-secondary text-white px-6 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 transition">Submit Evidence</a>
-    <a href="/about" class="inline-block border-2 border-primary text-primary px-6 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:bg-primary hover:text-white transition">Learn How It Works</a>
+    <a href="/submit" class="inline-block btn btn-primary">Submit Evidence</a>
+    <a href="/about" class="inline-block btn btn-secondary">Learn How It Works</a>
   </div>
 </section>
 
@@ -21,7 +21,7 @@
     <ul class="text-sm space-y-1.5 text-ink">
       <li>· 4 credits of social studies (1 pt)</li>
       <li>· Regents Mastery / Proficiency (1.5 / 1 pt, repeatable)</li>
-      <li>· Advanced SS course — AP, IB, Honors (0.5 pt, repeatable)</li>
+      <li>· Advanced SS course · AP, IB, Honors (0.5 pt, repeatable)</li>
       <li>· Civic-knowledge research project (1 pt)</li>
     </ul>
     <p class="text-xs text-muted mt-3 italic">≥ 2 points required from this column.</p>
@@ -43,9 +43,9 @@
 
 <section class="mb-12 border-l-4 border-secondary pl-5 py-2">
   <p class="font-display font-semibold text-lg text-primary mb-1">Six points total. Two from each column. One Seal.</p>
-  <p class="text-sm text-muted">Evidence accumulates across grades 9–12. You don't have to do everything — pick a path that matches what you care about. Every submission is reviewed by your counselor and (for projects) the Civic Readiness Committee.</p>
+  <p class="text-sm text-muted">Evidence accumulates across grades 9–12. You don't have to do everything · pick a path that matches what you care about. Every submission is reviewed by your counselor and (for projects) the Civic Readiness Committee.</p>
 </section>
 
 <section class="text-xs text-muted mt-16 pt-6 border-t border-border">
-  Source: <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-information" class="text-primary hover:underline">NYSED — Seal of Civic Readiness Information</a> · <a href="https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness" class="text-primary hover:underline">Criteria</a> · <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual" class="text-primary hover:underline">Handbook (Updated 2024)</a>
+  Source: <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-information" class="text-primary hover:underline">NYSED · Seal of Civic Readiness Information</a> · <a href="https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness" class="text-primary hover:underline">Criteria</a> · <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual" class="text-primary hover:underline">Handbook (Updated 2024)</a>
 </section>

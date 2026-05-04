@@ -44,7 +44,7 @@
       case 'awarded':
         return 'Awarded';
       case 'eligible':
-        return 'Eligible — confirm';
+        return 'Eligible · confirm';
       case 'needs_knowledge':
         return 'Needs Knowledge';
       case 'needs_participation':
@@ -87,13 +87,13 @@
     <nav class="flex gap-2 items-center mt-2">
       <a
         href="/counselor/queue"
-        class="inline-block bg-secondary text-white px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs hover:opacity-90 transition"
+        class="inline-block btn btn-primary"
       >
         Approval Queue
       </a>
       <a
         href="/counselor/import-help"
-        class="inline-block border border-primary text-primary px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs hover:bg-primary hover:text-white transition"
+        class="btn btn-secondary"
       >
         Import Help
       </a>
@@ -112,7 +112,7 @@
     <p class="font-display text-2xl text-green-900 font-bold mt-1">{data.awardedCount}</p>
   </div>
   <div class="border border-secondary/30 rounded-lg bg-secondary/5 p-4">
-    <p class="text-xs uppercase tracking-widest text-secondary font-display font-semibold">Eligible — needs confirm</p>
+    <p class="text-xs uppercase tracking-widest text-secondary font-display font-semibold">Eligible · needs confirm</p>
     <p class="font-display text-2xl text-secondary font-bold mt-1">{data.eligibleCount}</p>
   </div>
   <div class="border border-blue-200 rounded-lg bg-blue-50 p-4">
@@ -158,7 +158,7 @@
     >
       <option value="all">All</option>
       <option value="awarded">Awarded</option>
-      <option value="eligible">Eligible — confirm</option>
+      <option value="eligible">Eligible · confirm</option>
       <option value="needs_knowledge">Needs Knowledge</option>
       <option value="needs_participation">Needs Participation</option>
       <option value="needs_both">Needs Both</option>

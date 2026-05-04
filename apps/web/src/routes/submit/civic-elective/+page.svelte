@@ -3,7 +3,7 @@
   export let form: ActionData;
 </script>
 
-<svelte:head><title>Civic-Engagement Elective Essay — GNPS Civic Readiness</title></svelte:head>
+<svelte:head><title>Civic-Engagement Elective Essay · GNPS Civic Readiness</title></svelte:head>
 
 <a href="/submit" class="text-sm text-primary hover:underline">← All pathways</a>
 <h1 class="font-display text-3xl text-primary mt-2 mb-1">Civic-Engagement Elective Essay</h1>
@@ -84,7 +84,7 @@
       </label>
     </fieldset>
 
-    <button class="bg-secondary text-white px-7 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 transition">Upload essay</button>
+    <button class="btn btn-primary">Upload essay</button>
     <p class="text-xs text-muted mt-2">By submitting, you confirm this is your own work. The 0.5 point is awarded once your course teacher confirms course-grade proficiency.</p>
   </form>
 {/if}

@@ -6,6 +6,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Extracted from live greatneck.k12.ny.us CSS custom properties.
         primary: { DEFAULT: '#204A97', dark: '#1a3d80' },
         secondary: '#FE8158',
         surface: '#f7f9fc',
@@ -14,8 +15,13 @@ export default {
         border: '#d4d8e0'
       },
       fontFamily: {
-        display: ['Outfit', 'system-ui', 'sans-serif'],
-        body: ['Roboto', 'system-ui', 'sans-serif'],
+        // Matches the GNPS site exactly:
+        //   --main-font:   "Open Sans"   (body text)
+        //   --accent-font: "Literata"    (long-form accents, blockquotes, captions)
+        //   Roboto                       (button text per the .small-button class)
+        display: ['"Open Sans"', 'system-ui', 'sans-serif'],
+        body: ['"Open Sans"', 'system-ui', 'sans-serif'],
+        button: ['Roboto', 'system-ui', 'sans-serif'],
         serif: ['Literata', 'Georgia', 'serif']
       }
     }

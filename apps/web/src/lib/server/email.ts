@@ -3,17 +3,17 @@
  *
  * The transport is created lazily on the first send and cached for the
  * process lifetime. If SMTP_HOST isn't set, every helper short-circuits to
- * `{ ok: false, reason: 'not_configured' }` — Phase-1 deployments without
+ * `{ ok: false, reason: 'not_configured' }` · Phase-1 deployments without
  * an SMTP relay still work end-to-end (sends are skipped with a console
  * warning, hours_log / tokens are still persisted).
  *
  * Public functions:
- *   - signToken / verifyToken             — HMAC-SHA-256 of a UUID for the
+ *   - signToken / verifyToken             · HMAC-SHA-256 of a UUID for the
  *                                            supervisor confirmation links and
  *                                            evidence signed-URLs.
- *   - sendSupervisorConfirmation(input)   — branded confirmation email.
- *   - sendMagicLink({ to, ... })          — staff sign-in link (1-hour expiry).
- *   - sendEmail({ to, subject, html, ... }) — generic relay used by the
+ *   - sendSupervisorConfirmation(input)   · branded confirmation email.
+ *   - sendMagicLink({ to, ... })          · staff sign-in link (1-hour expiry).
+ *   - sendEmail({ to, subject, html, ... }) · generic relay used by the
  *                                            student progress report and any
  *                                            future ad-hoc senders.
  *
@@ -127,7 +127,7 @@ function getTransport(cfg: SmtpConfig): Transporter {
 
 export interface SendEmailInput {
   to: string;
-  /** Optional CC list — used to copy the student's faculty advisor on progress reports. */
+  /** Optional CC list · used to copy the student's faculty advisor on progress reports. */
   cc?: string[];
   subject: string;
   html: string;
@@ -138,13 +138,13 @@ export interface SendEmailResult {
   ok: boolean;
   /** Provider-side message id when available. */
   messageId?: string;
-  /** Reason the email was not sent — 'not_configured' | 'send_error'. */
+  /** Reason the email was not sent · 'not_configured' | 'send_error'. */
   reason?: 'not_configured' | 'send_error';
 }
 
 /**
  * Send a generic transactional email. Used by the student progress report
- * and any future one-off senders. Failures NEVER throw — caller can decide
+ * and any future one-off senders. Failures NEVER throw · caller can decide
  * whether to surface the warning or log it.
  */
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
@@ -178,7 +178,7 @@ export interface MagicLinkEmailInput {
   to: string;
   fullName: string;
   signinUrl: string;
-  /** ISO timestamp when the link stops working — surfaced in the body. */
+  /** ISO timestamp when the link stops working · surfaced in the body. */
   expiresAt: string;
 }
 
@@ -197,7 +197,7 @@ function buildMagicLinkHtml(i: MagicLinkEmailInput): string {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #d4d8e0;border-radius:8px;overflow:hidden">
     <tr>
       <td style="background:#204A97;color:#fff;padding:18px 24px;font-weight:600;font-size:15px">
-        Great Neck Public Schools — Seal of Civic Readiness
+        Great Neck Public Schools · Seal of Civic Readiness
       </td>
     </tr>
     <tr>
@@ -258,7 +258,7 @@ export interface SupervisorEmailInput {
 export interface SupervisorEmailResult {
   ok: boolean;
   providerMessageId?: string;
-  /** Reason the email could not be sent — e.g. 'not_configured', 'send_error'. */
+  /** Reason the email could not be sent · e.g. 'not_configured', 'send_error'. */
   reason?: 'not_configured' | 'send_error';
 }
 
@@ -275,7 +275,7 @@ function buildConfirmHtml(i: SupervisorEmailInput, confirmUrl: string, disputeUr
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #d4d8e0;border-radius:8px;overflow:hidden">
     <tr>
       <td style="background:#204A97;color:#fff;padding:18px 24px;font-weight:600;font-size:15px">
-        Great Neck Public Schools — Seal of Civic Readiness
+        Great Neck Public Schools · Seal of Civic Readiness
       </td>
     </tr>
     <tr>

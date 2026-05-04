@@ -9,7 +9,7 @@
   <p class="text-xs uppercase tracking-widest text-secondary font-display font-semibold mb-2">Teacher</p>
   <h1 class="font-display text-3xl text-primary mb-3">Push civic readiness points</h1>
   <p class="font-serif text-base text-muted max-w-3xl">
-    When you've already collected the evidence — graded the research paper, supervised the civic project, taught the elective course — you can push points to your students directly. No need to ask each one to submit through the public form.
+    When you've already collected the evidence · graded the research paper, supervised the civic project, taught the elective course · you can push points to your students directly. No need to ask each one to submit through the public form.
   </p>
 </section>
 
@@ -30,7 +30,7 @@
 <section class="bg-surface border-l-4 border-secondary p-5 rounded-lg max-w-3xl mb-8">
   <p class="font-display font-semibold text-primary mb-2">How pushes are reviewed</p>
   <ul class="text-sm text-muted space-y-1.5 list-disc pl-5">
-    <li>If you're also on the <strong>Civic Readiness Committee</strong>, your push is awarded immediately — your score is the SCRC score.</li>
+    <li>If you're also on the <strong>Civic Readiness Committee</strong>, your push is awarded immediately · your score is the SCRC score.</li>
     <li>Otherwise, your push lands in the SCRC review queue and gets the same rubric scoring as a student-initiated proposal. The SCRC committee scores against the NYSED rubric, then the points award.</li>
     <li>Either way, the student gets credit and can see it in their progress email after the next submission.</li>
   </ul>

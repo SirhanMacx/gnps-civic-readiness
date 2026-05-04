@@ -10,7 +10,7 @@
   }
 
   function fmtDate(s: string | null): string {
-    if (!s) return '—';
+    if (!s) return ' · ';
     try {
       return new Date(s).toLocaleDateString('en-US', {
         month: 'short',
@@ -50,7 +50,7 @@
     if (detail.eligible) {
       return {
         cls: 'bg-green-50 text-green-900 border-green-200',
-        label: 'Eligible — confirm to award',
+        label: 'Eligible · confirm to award',
       };
     }
     const lowK = detail.knowledge < 2;
@@ -79,7 +79,7 @@
   $: civicElectiveCoursework = detail.enrollment.filter((e) => e.countsFor.includes('2c'));
 
   function emailHref(): string {
-    return `mailto:?subject=${encodeURIComponent(`Seal of Civic Readiness — ${student.firstName} ${student.lastName}`)}`;
+    return `mailto:?subject=${encodeURIComponent(`Seal of Civic Readiness · ${student.firstName} ${student.lastName}`)}`;
   }
 </script>
 
@@ -116,13 +116,13 @@
       </span>
       <a
         href={emailHref()}
-        class="inline-block border border-primary text-primary px-3 py-1.5 rounded font-display font-semibold uppercase tracking-wide text-xs hover:bg-primary hover:text-white transition"
+        class="btn btn-secondary"
       >
         Email student
       </a>
       <a
         href={`/counselor/student/${student.id}/audit.pdf`}
-        class="inline-block bg-secondary text-white px-3 py-1.5 rounded font-display font-semibold uppercase tracking-wide text-xs hover:opacity-90"
+        class="inline-block btn btn-primary"
       >
         NYSED audit pack PDF
       </a>
@@ -291,7 +291,7 @@
                 <span class="text-ink ml-2">{e.title}</span>
               </td>
               <td class="px-3 py-2 text-xs text-ink">{e.schoolYear}</td>
-              <td class="px-3 py-2 text-xs text-ink">{e.finalGrade ?? '—'}</td>
+              <td class="px-3 py-2 text-xs text-ink">{e.finalGrade ?? ' · '}</td>
               <td class="px-3 py-2 text-xs text-ink capitalize">{e.creditStatus.replace(/_/g, ' ')}</td>
               <td class="px-3 py-2">
                 <div class="flex flex-wrap gap-1">

@@ -6,7 +6,7 @@
   export let form: ActionData;
 
   function formatDate(s: string | null): string {
-    if (!s) return '—';
+    if (!s) return ' · ';
     return s.length >= 10 ? s.slice(0, 10) : s;
   }
   function roleLabel(r: string): string {

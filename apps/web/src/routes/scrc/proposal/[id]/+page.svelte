@@ -26,7 +26,7 @@
   };
 
   function fmtDate(iso: string | null): string {
-    if (!iso) return '—';
+    if (!iso) return ' · ';
     return new Date(iso).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -60,32 +60,32 @@
     </div>
   {/if}
 
-  <!-- Proposal data — always shown (this is the input to both topic review and final scoring) -->
+  <!-- Proposal data · always shown (this is the input to both topic review and final scoring) -->
   <div class="border border-border rounded-lg bg-surface px-6 py-5 mb-6">
     <h2 class="font-display text-xl font-bold text-primary mb-3">Proposal</h2>
     <dl class="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm">
       <div class="sm:col-span-3">
         <dt class="text-xs uppercase tracking-wider text-muted font-semibold">Issue identified</dt>
-        <dd class="mt-1 text-ink whitespace-pre-wrap">{submission.issueIdentified ?? '—'}</dd>
+        <dd class="mt-1 text-ink whitespace-pre-wrap">{submission.issueIdentified ?? ' · '}</dd>
       </div>
       <div>
         <dt class="text-xs uppercase tracking-wider text-muted font-semibold">Scope</dt>
-        <dd class="mt-1 text-ink capitalize">{submission.scope ?? '—'}</dd>
+        <dd class="mt-1 text-ink capitalize">{submission.scope ?? ' · '}</dd>
       </div>
       <div>
         <dt class="text-xs uppercase tracking-wider text-muted font-semibold">Advisor</dt>
-        <dd class="mt-1 text-ink">{submission.advisorName ?? '—'}</dd>
+        <dd class="mt-1 text-ink">{submission.advisorName ?? ' · '}</dd>
       </div>
       <div>
         <dt class="text-xs uppercase tracking-wider text-muted font-semibold">Domain tags</dt>
         <dd class="mt-1 text-ink capitalize">
-          {#if submission.domainTags.length > 0}{submission.domainTags.join(', ')}{:else}—{/if}
+          {#if submission.domainTags.length > 0}{submission.domainTags.join(', ')}{:else} · {/if}
         </dd>
       </div>
       <div class="sm:col-span-3">
         <dt class="text-xs uppercase tracking-wider text-muted font-semibold">Civic-experience plan</dt>
         <dd class="mt-1 text-ink whitespace-pre-wrap">
-          {(submission.proposalData.civic_experience_plan as string | undefined) ?? '—'}
+          {(submission.proposalData.civic_experience_plan as string | undefined) ?? ' · '}
         </dd>
       </div>
       <div>
@@ -127,7 +127,7 @@
         {#each rubric.criteria as c}
           <li>
             <span class="font-semibold text-primary">{c.label}</span>
-            <span class="text-muted"> — {c.description}</span>
+            <span class="text-muted"> · {c.description}</span>
           </li>
         {/each}
       </ul>
@@ -235,7 +235,7 @@
         </div>
       {:else}
         <div class="mb-5 border-l-4 border-amber-400 bg-amber-50 px-4 py-3 rounded-r text-sm text-amber-900">
-          No evidence files attached. The student may have linked work elsewhere — confirm with
+          No evidence files attached. The student may have linked work elsewhere · confirm with
           the counselor before scoring.
         </div>
       {/if}
@@ -299,7 +299,7 @@
         {#each rubric.criteria as c}
           <li>
             <span class="font-semibold text-ink">{c.label}:</span>
-            <span class="text-primary">{submission.rubricScores[c.key] ?? '—'} / {rubric.scaleMax}</span>
+            <span class="text-primary">{submission.rubricScores[c.key] ?? ' · '} / {rubric.scaleMax}</span>
           </li>
         {/each}
       </ul>

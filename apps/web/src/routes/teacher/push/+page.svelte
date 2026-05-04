@@ -5,7 +5,7 @@
 
   // Default points by pathway (NYSED-defined). Teacher can override below the cap.
   const PATHWAY_DEFAULTS: Record<string, { label: string; points: number; notes: string }> = {
-    research_project:    { label: 'Research Project (1e)',                    points: 1.0, notes: 'NYSED civic-knowledge research project — 1 pt' },
+    research_project:    { label: 'Research Project (1e)',                    points: 1.0, notes: 'NYSED civic-knowledge research project · 1 pt' },
     hs_civic_project:    { label: 'HS Civic Project (2a)',                    points: 1.5, notes: '1.5 pt · max 2 instances per student (3 pt cap)' },
     hs_capstone:         { label: 'Civics Capstone Project (2f)',             points: 4.0, notes: '4 pt · single instance · NYSED Appendix P rubric' },
     ms_capstone:         { label: 'MS Capstone Project (grades 7–8)',          points: 1.0, notes: '1 pt · MS work back-entered at HS intake' },
@@ -28,11 +28,11 @@
   <div class="bg-green-50 border-l-4 border-green-600 p-5 rounded mb-6 max-w-3xl">
     <p class="font-display font-semibold text-green-900 text-lg mb-1">
       Pushed {form.pushedCount} student{form.pushedCount === 1 ? '' : 's'}
-      {#if form.status === 'awarded'}— points awarded immediately{:else}— queued for SCRC review{/if}
+      {#if form.status === 'awarded'} ·  points awarded immediately{:else} ·  queued for SCRC review{/if}
     </p>
     {#if form.rejected && form.rejected.length > 0}
       <details class="mt-2">
-        <summary class="text-sm text-green-900 cursor-pointer">{form.rejected.length} student(s) skipped — see why</summary>
+        <summary class="text-sm text-green-900 cursor-pointer">{form.rejected.length} student(s) skipped · see why</summary>
         <ul class="text-sm text-green-900 mt-2 list-disc pl-6">
           {#each form.rejected as r}
             <li><code>{r.studentId}</code>: {r.reason.replace(/_/g, ' ')}</li>
@@ -79,14 +79,14 @@
             class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary"
             required
           />
-          <p class="text-xs text-muted mt-1">Cap rules apply automatically — over-cap pushes are skipped.</p>
+          <p class="text-xs text-muted mt-1">Cap rules apply automatically · over-cap pushes are skipped.</p>
         </label>
 
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Class label (optional)</span>
           <input
             name="classLabel"
-            placeholder="e.g. AP US Government — Period 4"
+            placeholder="e.g. AP US Government · Period 4"
             class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary"
           />
           <p class="text-xs text-muted mt-1">Shows in the audit log + counselor view.</p>
@@ -96,7 +96,7 @@
 
     <fieldset class="border border-border rounded-lg p-5">
       <legend class="px-2 text-xs uppercase tracking-widest font-display font-semibold text-primary">2 · Who gets it</legend>
-      <p class="text-xs text-muted mb-2">Paste student IDs — one per line, or comma-separated. Up to 200 per push.</p>
+      <p class="text-xs text-muted mb-2">Paste student IDs · one per line, or comma-separated. Up to 200 per push.</p>
       <textarea
         name="studentIds"
         rows="6"
@@ -104,7 +104,7 @@
         placeholder={'GN20271234\nGN20275511\nGN20274432\n...'}
         class="w-full mt-1 px-3 py-2 border border-border rounded text-sm font-mono focus:border-primary focus:ring-1 focus:ring-primary"
       ></textarea>
-      <p class="text-xs text-muted mt-2">Phase 2: pick a class roster directly from Infinite Campus. For now, a CSV export from IC's "Student Roster" report works — paste the ID column here.</p>
+      <p class="text-xs text-muted mt-2">Phase 2: pick a class roster directly from Infinite Campus. For now, a CSV export from IC's "Student Roster" report works · paste the ID column here.</p>
     </fieldset>
 
     <fieldset class="border border-border rounded-lg p-5">
@@ -134,7 +134,7 @@
       </label>
     </fieldset>
 
-    <button class="bg-secondary text-white px-7 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 transition">
+    <button class="btn btn-primary">
       Push to all
     </button>
     <p class="text-xs text-muted mt-2">By pushing, you confirm you have the evidence on file. Pushes are logged with your user identity.</p>

@@ -1,7 +1,7 @@
-<svelte:head><title>Submit Evidence — GNPS Civic Readiness</title></svelte:head>
+<svelte:head><title>Submit Evidence · GNPS Civic Readiness</title></svelte:head>
 
 <h1 class="font-display text-3xl text-primary mb-3">Submit Evidence</h1>
-<p class="font-serif text-lg text-muted mb-8 max-w-3xl">Choose the pathway that matches what you've done. You can submit evidence as you go — you don't have to wait until senior year.</p>
+<p class="font-serif text-lg text-muted mb-8 max-w-3xl">Choose the pathway that matches what you've done. You can submit evidence as you go · you don't have to wait until senior year.</p>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
   {#each [
@@ -22,7 +22,7 @@
       <div class="block border border-border rounded-lg p-5 bg-surface opacity-70 cursor-not-allowed">
         <div class="font-display font-semibold text-primary">{p.label}</div>
         <div class="text-xs text-muted mt-1.5">{p.sub}</div>
-        <div class="text-xs text-muted font-display font-semibold uppercase tracking-wider mt-3">Coming soon — pilot expanding May 2026</div>
+        <div class="text-xs text-muted font-display font-semibold uppercase tracking-wider mt-3">Coming soon · pilot expanding May 2026</div>
       </div>
     {/if}
   {/each}

@@ -3,7 +3,7 @@
   export let form: ActionData;
 </script>
 
-<svelte:head><title>Service-Learning Hours — GNPS Civic Readiness</title></svelte:head>
+<svelte:head><title>Service-Learning Hours · GNPS Civic Readiness</title></svelte:head>
 
 <a href="/submit" class="text-sm text-primary hover:underline">← All pathways</a>
 <h1 class="font-display text-3xl text-primary mt-2 mb-1">Service-Learning Hours</h1>
@@ -15,7 +15,7 @@
     {#if form.emailSent}
       <p class="text-sm text-green-900">We've emailed <strong>{form.supervisorEmail}</strong> a confirmation link. Once they click confirm, your hours count toward the 25-hour threshold.</p>
     {:else}
-      <p class="text-sm text-green-900">Your hours have been recorded. Note: automatic supervisor email is not yet configured — a counselor will follow up with <strong>{form.supervisorEmail}</strong> directly.</p>
+      <p class="text-sm text-green-900">Your hours have been recorded. Note: automatic supervisor email is not yet configured · a counselor will follow up with <strong>{form.supervisorEmail}</strong> directly.</p>
     {/if}
     {#if form.studentProgressSent}
       <p class="text-sm text-green-900 mt-2">Progress report sent to <strong>{form.studentEmail}</strong>{#if form.advisorEmail} (cc'd to your advisor at <strong>{form.advisorEmail}</strong>){/if}.</p>
@@ -74,11 +74,11 @@
         </label>
         <div class="grid grid-cols-2 gap-4">
           <label class="block">
-            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — start *</span>
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date · start *</span>
             <input name="dateStart" type="date" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
           <label class="block">
-            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — end *</span>
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date · end *</span>
             <input name="dateEnd" type="date" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
           <label class="block">
@@ -88,10 +88,10 @@
           <label class="block">
             <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Service type (NYSED-defined) *</span>
             <select name="serviceType" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-white">
-              <option value="">— pick one —</option>
-              <option value="direct">Direct — face-to-face with people you serve</option>
-              <option value="indirect">Indirect — meets a need without direct contact</option>
-              <option value="advocacy">Advocacy — educating others about an issue</option>
+              <option value=""> ·  pick one  · </option>
+              <option value="direct">Direct · face-to-face with people you serve</option>
+              <option value="indirect">Indirect · meets a need without direct contact</option>
+              <option value="advocacy">Advocacy · educating others about an issue</option>
             </select>
           </label>
         </div>
@@ -121,7 +121,7 @@
       </div>
     </fieldset>
 
-    <button class="bg-secondary text-white px-7 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 transition">Submit hours</button>
+    <button class="btn btn-primary">Submit hours</button>
     <p class="text-xs text-muted mt-2">By submitting, you confirm this information is accurate. Falsifying evidence forfeits the Seal.</p>
   </form>
 {/if}

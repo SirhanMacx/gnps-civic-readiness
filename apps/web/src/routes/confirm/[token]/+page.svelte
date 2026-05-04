@@ -8,7 +8,7 @@
 </script>
 
 <svelte:head>
-  <title>Confirm hours — GNPS Civic Readiness</title>
+  <title>Confirm hours · GNPS Civic Readiness</title>
 </svelte:head>
 
 <div class="max-w-2xl">
@@ -43,7 +43,7 @@
   {:else if data.alreadyConfirmed}
     <h1 class="font-display text-3xl text-primary mb-3">Already confirmed</h1>
     <p class="font-serif text-base leading-relaxed text-ink mb-4">
-      These hours were already confirmed. Thank you — no further action is needed.
+      These hours were already confirmed. Thank you · no further action is needed.
     </p>
   {:else if data.alreadyDisputed}
     <h1 class="font-display text-3xl text-primary mb-3">Correction already submitted</h1>
@@ -71,14 +71,14 @@
     </div>
 
     <p class="font-serif text-base leading-relaxed text-ink mb-5">
-      Hi {data.supervisorName ?? 'there'} — by clicking <strong>Confirm</strong> below, you're confirming that the
+      Hi {data.supervisorName ?? 'there'} · by clicking <strong>Confirm</strong> below, you're confirming that the
       student logged this time supervising under you. Confirmation takes about five seconds and helps the student
       earn the New York State Seal of Civic Readiness.
     </p>
 
     <form method="POST" action="?/confirm" class="inline">
       <button
-        class="bg-secondary text-white px-7 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 transition"
+        class="btn btn-primary"
       >
         Confirm {data.hours} hours
       </button>
@@ -100,11 +100,11 @@
             minlength="3"
             maxlength="1000"
             class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary"
-            placeholder="e.g. Maya worked 6 hours, not 8 — only April 15 and April 22 (3 hrs each)"
+            placeholder="e.g. Maya worked 6 hours, not 8 · only April 15 and April 22 (3 hrs each)"
           ></textarea>
         </label>
         <button
-          class="border border-primary text-primary px-5 py-2 rounded font-display font-semibold uppercase tracking-wide text-sm hover:bg-primary hover:text-white transition"
+          class="btn btn-secondary"
         >
           Submit correction
         </button>

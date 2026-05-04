@@ -17,7 +17,7 @@
       return 'That sign-in link is invalid or has already been used. Request a new one below.';
     }
     if (code === 'expired') {
-      return 'That sign-in link expired. Magic links last 1 hour — request a new one below.';
+      return 'That sign-in link expired. Magic links last 1 hour · request a new one below.';
     }
     return 'Something went wrong with sign-in. Please try again.';
   }
@@ -31,7 +31,7 @@
   <p class="text-xs uppercase tracking-widest text-secondary font-display font-semibold mb-2">Staff Sign-In</p>
   <h1 class="font-display text-3xl font-bold text-primary mb-3 leading-tight">Sign in to the GNPS Civic Readiness Portal</h1>
   <p class="text-sm text-muted mb-6 leading-relaxed">
-    For Great Neck counselors, Civic Readiness Committee members, and admins. Enter your district email — we'll send a one-time sign-in link.
+    For Great Neck counselors, Civic Readiness Committee members, and admins. Enter your district email · we'll send a one-time sign-in link.
   </p>
 
   {#if errorMessage(data.error)}
@@ -86,7 +86,7 @@
       <button
         type="submit"
         disabled={submitting}
-        class="w-full bg-secondary text-white py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 disabled:opacity-50 transition"
+        class="btn btn-primary w-full disabled:opacity-50"
       >
         {submitting ? 'Sending…' : 'Send sign-in link'}
       </button>
@@ -100,6 +100,6 @@
   <hr class="my-8 border-border" />
 
   <p class="text-xs text-muted">
-    Are you a student or supervisor? You don't need to sign in to <a href="/submit" class="text-primary hover:underline">submit evidence</a> or confirm hours — just use the link from your email.
+    Are you a student or supervisor? You don't need to sign in to <a href="/submit" class="text-primary hover:underline">submit evidence</a> or confirm hours · just use the link from your email.
   </p>
 </section>

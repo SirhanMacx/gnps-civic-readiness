@@ -18,7 +18,7 @@
   }
 
   function fmtDate(s: string | null): string {
-    if (!s) return '—';
+    if (!s) return ' · ';
     try {
       return new Date(s).toLocaleDateString('en-US', {
         month: 'short',
@@ -38,7 +38,7 @@
     if (status === 'scored') {
       return {
         cls: 'bg-blue-50 text-blue-900 border-blue-200',
-        label: 'SCRC scored — awaiting your confirm',
+        label: 'SCRC scored · awaiting your confirm',
       };
     }
     return {
@@ -47,7 +47,7 @@
     };
   }
 
-  // Cast form once to a permissive shape — SvelteKit's generated ActionData
+  // Cast form once to a permissive shape · SvelteKit's generated ActionData
   // union narrows aggressively across the three actions; we just want to
   // surface the optional success/error/action fields.
   type FormShape = {
@@ -217,21 +217,21 @@
             <button
               type="button"
               on:click={() => setOpen(item.submissionId, openAction[item.submissionId] === 'approve' ? null : 'approve')}
-              class="bg-secondary text-white px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs hover:opacity-90"
+              class="btn btn-primary"
             >
               Approve · award {item.defaultPoints} pt{item.defaultPoints === 1 ? '' : 's'}
             </button>
             <button
               type="button"
               on:click={() => setOpen(item.submissionId, openAction[item.submissionId] === 'revise' ? null : 'revise')}
-              class="border border-primary text-primary px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs hover:bg-primary hover:text-white transition"
+              class="btn btn-secondary"
             >
               Request revision
             </button>
             <button
               type="button"
               on:click={() => setOpen(item.submissionId, openAction[item.submissionId] === 'decline' ? null : 'decline')}
-              class="border border-red-300 text-red-900 px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs hover:bg-red-50"
+              class="btn bg-transparent text-red-700 border-red-300 hover:bg-red-50"
             >
               Decline
             </button>
@@ -271,7 +271,7 @@
               <div class="flex gap-2">
                 <button
                   type="submit"
-                  class="bg-secondary text-white px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs hover:opacity-90"
+                  class="btn btn-primary"
                 >
                   Confirm award
                 </button>
@@ -298,14 +298,14 @@
                   name="notes"
                   rows="3"
                   required
-                  placeholder="Reflection should address all 5 NYSED stages — please expand on stage 4 (Implementation)…"
+                  placeholder="Reflection should address all 5 NYSED stages · please expand on stage 4 (Implementation)…"
                   class="w-full px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-white"
                 ></textarea>
               </label>
               <div class="flex gap-2">
                 <button
                   type="submit"
-                  class="bg-primary text-white px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs hover:opacity-90"
+                  class="btn btn-primary"
                 >
                   Send back for revision
                 </button>
@@ -339,7 +339,7 @@
               <div class="flex gap-2">
                 <button
                   type="submit"
-                  class="bg-red-700 text-white px-4 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs hover:opacity-90"
+                  class="btn bg-red-700 text-white border-red-700 hover:bg-red-800"
                 >
                   Decline submission
                 </button>

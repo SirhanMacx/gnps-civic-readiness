@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>{$page.status} — GNPS Civic Readiness</title>
+  <title>{$page.status} · GNPS Civic Readiness</title>
 </svelte:head>
 
 <section class="text-center py-12 max-w-2xl mx-auto">
@@ -15,17 +15,17 @@
     {:else if $page.status === 403}
       You don't have access to this page. If you're staff, sign in with your district email; otherwise this area is for staff only.
     {:else if $page.status === 500}
-      The server hit an unexpected error. We've logged it — try again in a moment, or email civicseal@greatneck.k12.ny.us if it keeps happening.
+      The server hit an unexpected error. We've logged it · try again in a moment, or email civicseal@greatneck.k12.ny.us if it keeps happening.
     {:else}
       {$page.error?.message ?? 'An unexpected error occurred.'}
     {/if}
   </p>
 
   <div class="flex flex-wrap gap-3 justify-center mt-8">
-    <a href="/" class="inline-block bg-secondary text-white px-6 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 transition">Back to home</a>
-    <a href="/submit" class="inline-block border-2 border-primary text-primary px-6 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:bg-primary hover:text-white transition">Submit Evidence</a>
+    <a href="/" class="inline-block btn btn-primary">Back to home</a>
+    <a href="/submit" class="inline-block btn btn-secondary">Submit Evidence</a>
     {#if $page.status === 403}
-      <a href="/login" class="inline-block border-2 border-primary text-primary px-6 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:bg-primary hover:text-white transition">Staff Login</a>
+      <a href="/login" class="inline-block btn btn-secondary">Staff Login</a>
     {/if}
   </div>
 

@@ -47,7 +47,7 @@
   <p class="text-sm text-muted mb-6 leading-relaxed max-w-3xl">
     Upload the CSV exported from Infinite Campus. The portal validates each row,
     shows a diff against existing data, and asks you to confirm before any writes.
-    Course rows whose code is not in the catalog are skipped with a warning —
+    Course rows whose code is not in the catalog are skipped with a warning  · 
     add them via Course Catalog and re-import.
   </p>
 
@@ -110,7 +110,7 @@
       <div class="mt-8 border border-border rounded-lg bg-white">
         <div class="px-6 py-4 border-b border-border">
           <h2 class="font-display text-lg font-bold text-primary">
-            Step 2 — Review diff
+            Step 2 · Review diff
           </h2>
           <p class="text-xs text-muted mt-1">
             Filename: <code>{parsed.filename}</code> · {parsed.bytes.toLocaleString()} bytes

@@ -19,7 +19,7 @@
 </script>
 
 <div class="min-h-screen flex flex-col bg-white">
-  <!-- District utility bar — mirrors the slim top row on greatneck.k12.ny.us so visitors moving
+  <!-- District utility bar · mirrors the slim top row on greatneck.k12.ny.us so visitors moving
        between the district site and this portal feel a continuous GNPS context. -->
   <div class="bg-primary-dark text-white text-xs">
     <div class="max-w-6xl mx-auto px-6 py-1.5 flex items-center justify-between gap-4">
@@ -33,10 +33,10 @@
     </div>
   </div>
 
-  <!-- Main district header — matches GNPS brand chrome (navy block, round logo, district name). -->
+  <!-- Main district header · matches GNPS brand chrome (navy block, round logo, district name). -->
   <header class="bg-primary text-white shadow-sm">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
-      <a href="/" class="flex items-center gap-3 font-display group" aria-label="GNPS Civic Readiness — Home">
+      <a href="/" class="flex items-center gap-3 font-display group" aria-label="GNPS Civic Readiness · Home">
         <img src={logoUrl} alt="GNPS" width="48" height="48" class="rounded-full bg-white p-0.5 shadow-sm" loading="eager" />
         <div class="flex flex-col leading-tight">
           <span class="font-semibold text-[16px] group-hover:underline">Great Neck Public Schools</span>
@@ -73,7 +73,7 @@
           <img src={logoUrl} alt="" width="32" height="32" class="rounded-full bg-white p-0.5" loading="lazy" />
           <span class="font-display font-semibold text-primary">Great Neck Public Schools</span>
         </div>
-        <p class="text-xs text-muted">NYS Seal of Civic Readiness Portal — Social Studies Department.</p>
+        <p class="text-xs text-muted">NYS Seal of Civic Readiness Portal · Social Studies Department.</p>
       </div>
       <div>
         <p class="font-display font-semibold text-primary text-xs uppercase tracking-wider mb-2">Portal</p>

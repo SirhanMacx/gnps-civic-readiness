@@ -3,7 +3,7 @@
   export let form: ActionData;
 </script>
 
-<svelte:head><title>High School Civic Project — GNPS Civic Readiness</title></svelte:head>
+<svelte:head><title>High School Civic Project · GNPS Civic Readiness</title></svelte:head>
 
 <a href="/submit" class="text-sm text-primary hover:underline">← All pathways</a>
 <h1 class="font-display text-3xl text-primary mt-2 mb-1">High School Civic Project</h1>
@@ -11,7 +11,7 @@
 
 {#if form?.success}
   <div class="bg-green-50 border-l-4 border-green-600 p-5 rounded mb-6 max-w-2xl">
-    <p class="font-display font-semibold text-green-900 text-lg mb-1">Topic proposal submitted — awaiting SCRC committee review</p>
+    <p class="font-display font-semibold text-green-900 text-lg mb-1">Topic proposal submitted · awaiting SCRC committee review</p>
     <p class="text-sm text-green-900">Submission #{form.submissionId} is now in the SCRC queue. You'll get an email once a committee member approves the topic. <strong>Do not begin the project until the topic is approved.</strong></p>
     <a href="/submit" class="inline-block mt-3 text-sm text-green-900 underline">Submit more evidence →</a>
   </div>
@@ -61,14 +61,14 @@
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Civic issue you've identified</span>
           <textarea name="issueIdentified" rows="3" minlength="30" maxlength="2000" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary"></textarea>
-          <span class="text-xs text-muted mt-1 block">Minimum 30 characters. Be specific — vague topics get sent back for revision.</span>
+          <span class="text-xs text-muted mt-1 block">Minimum 30 characters. Be specific · vague topics get sent back for revision.</span>
         </label>
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Scope</span>
           <select name="scope" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary bg-white">
-            <option value="local">Local — Great Neck, Town of North Hempstead, Nassau County</option>
-            <option value="state">State — New York</option>
-            <option value="national">National — United States</option>
+            <option value="local">Local · Great Neck, Town of North Hempstead, Nassau County</option>
+            <option value="state">State · New York</option>
+            <option value="national">National · United States</option>
             <option value="global">Global / international</option>
           </select>
         </label>
@@ -128,7 +128,7 @@
       </label>
     </fieldset>
 
-    <button class="bg-secondary text-white px-7 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 transition">Submit topic for SCRC review</button>
+    <button class="btn btn-primary">Submit topic for SCRC review</button>
     <p class="text-xs text-muted mt-2">Status moves to <em>proposed</em>. The SCRC committee will review at its next meeting. Do not begin work until the topic is <em>approved</em>.</p>
   </form>
 {/if}

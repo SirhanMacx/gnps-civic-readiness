@@ -3,7 +3,7 @@
   export let form: ActionData;
 </script>
 
-<svelte:head><title>WBL / Extra-curricular Hours — GNPS Civic Readiness</title></svelte:head>
+<svelte:head><title>WBL / Extra-curricular Hours · GNPS Civic Readiness</title></svelte:head>
 
 <a href="/submit" class="text-sm text-primary hover:underline">← All pathways</a>
 <h1 class="font-display text-3xl text-primary mt-2 mb-1">Extra-curricular / Work-Based Learning Hours</h1>
@@ -71,11 +71,11 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <label class="block">
-            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — start</span>
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date · start</span>
             <input name="dateStart" type="date" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
           <label class="block">
-            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date — end</span>
+            <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Date · end</span>
             <input name="dateEnd" type="date" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
           </label>
           <label class="block col-span-2">
@@ -110,7 +110,7 @@
       </div>
     </fieldset>
 
-    <button class="bg-secondary text-white px-7 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 transition">Submit hours</button>
+    <button class="btn btn-primary">Submit hours</button>
     <p class="text-xs text-muted mt-2">By submitting, you confirm this information is accurate. Falsifying evidence forfeits the Seal.</p>
   </form>
 {/if}

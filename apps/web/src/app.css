@@ -3,6 +3,95 @@
 @tailwind utilities;
 
 @layer base {
-  body { font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif; }
-  h1, h2, h3, h4 { font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif; color: #204A97; }
+  body {
+    font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+    color: #1a1a1a;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+    color: #204A97;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+  a { color: inherit; }
+}
+
+@layer components {
+  /* GNPS button shapes — match the .small-button.button-1 / .button-2 patterns
+     on greatneck.k12.ny.us. Square corners, Roboto, no letter-spacing tracking,
+     not uppercased. Generous 16/29 padding from the live CSS. */
+  .btn {
+    display: inline-block;
+    padding: 14px 26px;
+    font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1rem;
+    letter-spacing: 0;
+    text-decoration: none;
+    text-align: center;
+    border: 1px solid transparent;
+    border-radius: 0;
+    cursor: pointer;
+    transition: 0.25s all;
+  }
+  .btn-primary {
+    background: #FE8158;
+    color: #ffffff;
+    border-color: #FE8158;
+  }
+  .btn-primary:hover,
+  .btn-primary:focus {
+    background: #e96b40;
+    border-color: #e96b40;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: #204A97;
+    border-color: #204A97;
+  }
+  .btn-secondary:hover,
+  .btn-secondary:focus {
+    background: #204A97;
+    color: #ffffff;
+  }
+  .btn-on-primary {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+  .btn-on-primary:hover,
+  .btn-on-primary:focus {
+    background: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Form-input baseline matching the GNPS site's input styling: square corners,
+     1px border, comfortable 12px-vertical padding, no shadow. */
+  .field-input {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #c4c8d0;
+    border-radius: 0;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    color: #1a1a1a;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field-input:focus {
+    outline: none;
+    border-color: #204A97;
+    box-shadow: 0 0 0 3px rgba(32, 74, 151, 0.15);
+  }
+  .field-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    color: #204A97;
+    margin-bottom: 4px;
+  }
 }

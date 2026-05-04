@@ -1,5 +1,5 @@
 /**
- * Student progress report email — sent automatically after every submission
+ * Student progress report email · sent automatically after every submission
  * if the student provided their email address.
  *
  * Pulls current point totals via the same pathway-rules engine the staff
@@ -26,8 +26,8 @@ const APP_URL = publicEnv.PUBLIC_APP_URL ?? 'http://localhost:5173';
 
 const PATHWAY_LABELS: Record<PathwayId, string> = {
   four_ss_credits: 'Four social-studies credits',
-  regents_mastery: 'Regents — Mastery (≥85)',
-  regents_proficiency: 'Regents — Proficiency (65–84)',
+  regents_mastery: 'Regents · Mastery (≥85)',
+  regents_proficiency: 'Regents · Proficiency (65–84)',
   advanced_ss_course: 'Advanced social studies course',
   research_project: 'Research Project',
   hs_civic_project: 'High School Civic Project',
@@ -50,7 +50,7 @@ interface StudentProgress {
 async function buildProgress(studentId: string): Promise<StudentProgress | null> {
   const sb = supabaseAdmin();
 
-  // Course enrollments need a join into course_catalog — use raw SQL.
+  // Course enrollments need a join into course_catalog · use raw SQL.
   const enrollment = await sql<
     {
       credit_status: string;
@@ -135,7 +135,7 @@ function progressEmailHtml(input: {
   const eligibilityBlock = progress.eligible
     ? `<div style="background:#e8f5e9;border-left:4px solid #2e7d32;padding:14px;border-radius:4px;margin:18px 0">
          <strong style="color:#1b5e20;font-size:15px">✓ You're eligible.</strong>
-         <p style="margin:6px 0 0 0;color:#1b5e20;font-size:13px">Your counselor will confirm and the seal will be added at graduation. Keep submitting any new evidence — it strengthens your audit record.</p>
+         <p style="margin:6px 0 0 0;color:#1b5e20;font-size:13px">Your counselor will confirm and the seal will be added at graduation. Keep submitting any new evidence · it strengthens your audit record.</p>
        </div>`
     : (() => {
         const needs: string[] = [];
@@ -143,7 +143,7 @@ function progressEmailHtml(input: {
         if (progress.participation < 2) needs.push(`${(2 - progress.participation).toFixed(1)} more from Civic Participation`);
         if (progress.total < 6) needs.push(`${(6 - progress.total).toFixed(1)} more total`);
         return `<div style="background:#fff3d6;border-left:4px solid #d4a017;padding:14px;border-radius:4px;margin:18px 0">
-                  <strong style="color:#5a4500;font-size:15px">Not yet eligible — here's what you still need:</strong>
+                  <strong style="color:#5a4500;font-size:15px">Not yet eligible · here's what you still need:</strong>
                   <ul style="margin:8px 0 0 18px;color:#5a4500;font-size:13px">
                     ${needs.map((n) => `<li>${n}</li>`).join('')}
                   </ul>
@@ -152,7 +152,7 @@ function progressEmailHtml(input: {
 
   const awardedRows =
     progress.awardedPathways.length === 0
-      ? `<tr><td colspan="2" style="padding:8px 10px;color:#888;font-size:12px;font-style:italic">No awarded points yet — keep submitting!</td></tr>`
+      ? `<tr><td colspan="2" style="padding:8px 10px;color:#888;font-size:12px;font-style:italic">No awarded points yet · keep submitting!</td></tr>`
       : progress.awardedPathways
           .map(
             (a) =>
@@ -174,7 +174,7 @@ function progressEmailHtml(input: {
 <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;width:100%">
   <tr><td style="background:#204A97;padding:16px 22px;color:#fff">
     <div style="font-size:11px;letter-spacing:0.06em;text-transform:uppercase;opacity:0.8">Great Neck Public Schools</div>
-    <div style="font-size:18px;font-weight:600;margin-top:2px">Seal of Civic Readiness — your progress</div>
+    <div style="font-size:18px;font-weight:600;margin-top:2px">Seal of Civic Readiness · your progress</div>
   </td></tr>
   <tr><td style="padding:24px 24px 8px 24px">
     <p style="margin:0;font-size:15px">Hi ${studentName},</p>
@@ -246,7 +246,7 @@ export async function sendStudentProgressEmail(input: ProgressEmailInput): Promi
   const result = await sendEmail({
     to: input.studentEmail,
     cc: input.advisorEmail ? [input.advisorEmail] : undefined,
-    subject: `Your Seal of Civic Readiness progress — ${progress.total.toFixed(1)} / 6.0`,
+    subject: `Your Seal of Civic Readiness progress · ${progress.total.toFixed(1)} / 6.0`,
     html
   });
   if (!result.ok) {

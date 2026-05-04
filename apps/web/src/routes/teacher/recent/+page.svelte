@@ -30,7 +30,7 @@
 {#if data.pushes.length === 0}
   <div class="border border-border rounded-lg p-8 text-center bg-surface">
     <p class="text-muted">You haven't pushed any pathway points yet.</p>
-    <a href="/teacher/push" class="inline-block mt-3 bg-secondary text-white px-5 py-2 rounded font-display font-semibold uppercase tracking-wide text-xs">Push your first batch</a>
+    <a href="/teacher/push" class="inline-block mt-3 btn btn-primary">Push your first batch</a>
   </div>
 {:else}
   <div class="overflow-x-auto border border-border rounded-lg">
@@ -50,7 +50,7 @@
             <td class="px-4 py-2 text-muted">{formatDate(p.created_at)}</td>
             <td class="px-4 py-2 font-mono text-xs">{p.student_id}</td>
             <td class="px-4 py-2 capitalize">{pathwayLabel(p.pathway_type)}</td>
-            <td class="px-4 py-2 text-right font-display font-semibold">{p.points_awarded ?? '—'}</td>
+            <td class="px-4 py-2 text-right font-display font-semibold">{p.points_awarded ?? ' · '}</td>
             <td class="px-4 py-2">
               <span class="inline-block px-2 py-0.5 rounded text-xs font-display font-semibold uppercase tracking-wider {statusPill(p.status)}">
                 {p.status.replace(/_/g, ' ')}
