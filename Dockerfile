@@ -21,7 +21,6 @@ COPY packages/nysed-export/package.json ./packages/nysed-export/
 RUN pnpm install --frozen-lockfile
 
 # Copy source and config
-COPY tsconfig.base.json ./
 COPY scripts ./scripts
 COPY packages ./packages
 COPY apps/web ./apps/web
