@@ -1,6 +1,7 @@
 import type { Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 import { createWblSubmission, WblSubmissionSchema } from '$server/submissions.js';
+import { sendStudentProgressEmail } from '$server/student-progress-email.js';
 
 export const actions: Actions = {
   default: async ({ request }) => {
@@ -9,6 +10,7 @@ export const actions: Actions = {
       studentId: form.get('studentId'),
       studentLastName: form.get('studentLastName'),
       studentFirstName: form.get('studentFirstName'),
+      studentEmail: form.get('studentEmail') ?? '',
       gradYear: Number(form.get('gradYear')),
       activityName: form.get('activityName'),
       organization: form.get('organization') ?? form.get('activityName'),
@@ -25,10 +27,23 @@ export const actions: Actions = {
     }
     try {
       await createWblSubmission(parsed.data);
+      let progressSent = false;
+      if (parsed.data.studentEmail) {
+        const r = await sendStudentProgressEmail({
+          studentId: parsed.data.studentId,
+          studentEmail: parsed.data.studentEmail,
+          studentFirstName: parsed.data.studentFirstName,
+          studentLastName: parsed.data.studentLastName,
+          justSubmittedPathway: 'wbl_extracurr'
+        });
+        progressSent = r.ok;
+      }
       return {
         success: true,
         supervisorEmail: parsed.data.supervisorEmail,
-        hours: parsed.data.hours
+        hours: parsed.data.hours,
+        studentEmail: parsed.data.studentEmail || undefined,
+        studentProgressSent: progressSent
       };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

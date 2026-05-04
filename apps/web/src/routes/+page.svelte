@@ -6,7 +6,7 @@
   <p class="text-xs uppercase tracking-widest text-secondary font-display font-semibold mb-2">New York State Education Department · +1 Diploma Pathway</p>
   <h1 class="font-display text-4xl md:text-5xl font-bold text-primary mb-4 leading-tight">Seal of Civic Readiness</h1>
   <p class="font-serif text-lg text-muted max-w-3xl leading-relaxed">
-    A transcript-and-diploma distinction recognizing students who demonstrate civic knowledge, skills, mindsets, and experiences across grades 9–12. Great Neck Public Schools is building this portal as the open-source standard for tracking the Seal — for our students, and for any New York district that chooses to fork it.
+    A transcript-and-diploma distinction recognizing students who demonstrate civic knowledge, skills, mindsets, and experiences across grades 9–12. Use this portal to <strong>submit your hours, projects, and reflections</strong> and <strong>track your progress</strong> toward earning the Seal at graduation.
   </p>
   <div class="flex flex-wrap gap-3 mt-6">
     <a href="/submit" class="inline-block bg-secondary text-white px-6 py-3 rounded font-display font-semibold uppercase tracking-wide text-sm hover:opacity-90 transition">Submit Evidence</a>

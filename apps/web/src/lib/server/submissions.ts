@@ -5,6 +5,7 @@ export const ServiceSubmissionSchema = z.object({
   studentId: z.string().min(3).max(40),
   studentLastName: z.string().min(1).max(80),
   studentFirstName: z.string().min(1).max(80),
+  studentEmail: z.string().email().max(200).optional().or(z.literal('')),
   gradYear: z.number().int().min(2024).max(2040),
   activityName: z.string().min(2).max(200),
   organization: z.string().min(2).max(200),
@@ -34,7 +35,8 @@ export async function createServiceSubmission(input: ServiceSubmission): Promise
       id: data.studentId,
       last_name: data.studentLastName,
       first_name: data.studentFirstName,
-      grad_year: data.gradYear
+      grad_year: data.gradYear,
+      ...(data.studentEmail ? { email: data.studentEmail } : {})
     },
     { onConflict: 'id' }
   );
@@ -92,6 +94,7 @@ const IdentityShape = {
   studentId: z.string().min(3).max(40),
   studentLastName: z.string().min(1).max(80),
   studentFirstName: z.string().min(1).max(80),
+  studentEmail: z.string().email().max(200).optional().or(z.literal('')),
   gradYear: z.number().int().min(2024).max(2040)
 } as const;
 
@@ -99,6 +102,7 @@ async function upsertStudent(sb: SupabaseClientLike, data: {
   studentId: string;
   studentLastName: string;
   studentFirstName: string;
+  studentEmail?: string;
   gradYear: number;
 }): Promise<void> {
   const { error } = await sb.from('students').upsert(
@@ -106,7 +110,8 @@ async function upsertStudent(sb: SupabaseClientLike, data: {
       id: data.studentId,
       last_name: data.studentLastName,
       first_name: data.studentFirstName,
-      grad_year: data.gradYear
+      grad_year: data.gradYear,
+      ...(data.studentEmail ? { email: data.studentEmail } : {})
     },
     { onConflict: 'id' }
   );

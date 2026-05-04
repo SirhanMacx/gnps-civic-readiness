@@ -1,6 +1,7 @@
 import type { Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 import { createCivicElectiveEssay, CivicElectiveEssaySchema } from '$server/submissions.js';
+import { sendStudentProgressEmail } from '$server/student-progress-email.js';
 
 const ALLOWED_MIME = new Set([
   'application/pdf',
@@ -28,6 +29,7 @@ export const actions: Actions = {
       studentId: form.get('studentId'),
       studentLastName: form.get('studentLastName'),
       studentFirstName: form.get('studentFirstName'),
+      studentEmail: form.get('studentEmail') ?? '',
       gradYear: Number(form.get('gradYear')),
       courseCode: form.get('courseCode'),
       courseYear: form.get('courseYear'),
@@ -40,12 +42,25 @@ export const actions: Actions = {
     }
     try {
       const result = await createCivicElectiveEssay(parsed.data);
+      let progressSent = false;
+      if (parsed.data.studentEmail) {
+        const r = await sendStudentProgressEmail({
+          studentId: parsed.data.studentId,
+          studentEmail: parsed.data.studentEmail,
+          studentFirstName: parsed.data.studentFirstName,
+          studentLastName: parsed.data.studentLastName,
+          justSubmittedPathway: 'civic_elective_essay'
+        });
+        progressSent = r.ok;
+      }
       return {
         success: true,
         submissionId: result.submissionId,
         storagePath: result.storagePath,
         storageWarning: result.storageWarning ?? null,
-        fileName: parsed.data.fileName
+        fileName: parsed.data.fileName,
+        studentEmail: parsed.data.studentEmail || undefined,
+        studentProgressSent: progressSent
       };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

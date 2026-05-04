@@ -17,6 +17,11 @@
     {:else}
       <p class="text-sm text-green-900">Your hours have been recorded. <strong>Note:</strong> automatic supervisor email is not yet configured — a counselor will follow up with <strong>{form.supervisorEmail}</strong> directly.</p>
     {/if}
+    {#if form.studentProgressSent}
+      <p class="text-sm text-green-900 mt-2">📊 We just sent your current Seal of Civic Readiness progress to <strong>{form.studentEmail}</strong> — check your inbox.</p>
+    {:else if form.studentEmail}
+      <p class="text-sm text-green-900 mt-2">Your email is on file ({form.studentEmail}). Progress reports will arrive once email is configured.</p>
+    {/if}
     <p class="text-sm text-green-900 mt-2">You'll add a reflection essay once you reach 25 hours total.</p>
     <a href="/submit" class="inline-block mt-3 text-sm text-green-900 underline">Submit more evidence →</a>
   </div>
@@ -47,6 +52,10 @@
         <label class="block">
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Last name</span>
           <input name="studentLastName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
+        </label>
+        <label class="block col-span-2">
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Your email <span class="text-secondary normal-case">(optional — get a personal progress report after each submission)</span></span>
+          <input name="studentEmail" type="email" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="you@yourname.com or your school email" />
         </label>
       </div>
     </fieldset>

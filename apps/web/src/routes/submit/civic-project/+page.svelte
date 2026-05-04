@@ -43,6 +43,10 @@
           <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Last name</span>
           <input name="studentLastName" required class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
         </label>
+        <label class="block col-span-2">
+          <span class="text-xs uppercase tracking-wider font-display font-medium text-primary">Your email <span class="text-secondary normal-case">(optional — get a personal progress report after each submission)</span></span>
+          <input name="studentEmail" type="email" class="w-full mt-1 px-3 py-2 border border-border rounded text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="you@example.com or your school email" />
+        </label>
       </div>
     </fieldset>
 

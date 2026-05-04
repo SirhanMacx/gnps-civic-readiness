@@ -44,7 +44,7 @@
 
   <footer class="bg-surface border-t border-border px-6 py-5 text-xs text-muted">
     <div class="max-w-5xl mx-auto flex flex-wrap justify-between gap-3">
-      <span>© Great Neck Public Schools · NYS Seal of Civic Readiness Portal · Open-source on GitHub (MIT)</span>
+      <span>© Great Neck Public Schools · NYS Seal of Civic Readiness Portal</span>
       <span>Questions: <a href="mailto:civicseal@greatneck.k12.ny.us" class="text-primary hover:underline">civicseal@greatneck.k12.ny.us</a></span>
     </div>
   </footer>

@@ -1,6 +1,7 @@
 import type { Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 import { createProjectProposal, ProjectProposalSchema } from '$server/submissions.js';
+import { sendStudentProgressEmail } from '$server/student-progress-email.js';
 
 export const actions: Actions = {
   default: async ({ request }) => {
@@ -10,11 +11,9 @@ export const actions: Actions = {
       studentId: form.get('studentId'),
       studentLastName: form.get('studentLastName'),
       studentFirstName: form.get('studentFirstName'),
+      studentEmail: form.get('studentEmail') ?? '',
       gradYear: Number(form.get('gradYear')),
       pathwayType: 'research_project',
-      // The Research form uses a "researchQuestion" label but we store it in the
-      // same issue_identified column — the rubric validates against the same
-      // 30+ char civic-research-question criteria.
       issueIdentified: form.get('researchQuestion'),
       scope: form.get('scope'),
       civicExperiencePlan: form.get('civicExperiencePlan'),
@@ -26,7 +25,23 @@ export const actions: Actions = {
     }
     try {
       const result = await createProjectProposal(parsed.data);
-      return { success: true, submissionId: result.submissionId };
+      let progressSent = false;
+      if (parsed.data.studentEmail) {
+        const r = await sendStudentProgressEmail({
+          studentId: parsed.data.studentId,
+          studentEmail: parsed.data.studentEmail,
+          studentFirstName: parsed.data.studentFirstName,
+          studentLastName: parsed.data.studentLastName,
+          justSubmittedPathway: 'research_project'
+        });
+        progressSent = r.ok;
+      }
+      return {
+        success: true,
+        submissionId: result.submissionId,
+        studentEmail: parsed.data.studentEmail || undefined,
+        studentProgressSent: progressSent
+      };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error('createProjectProposal (research_project) failed:', msg, e);
