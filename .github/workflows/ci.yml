@@ -69,6 +69,14 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Validate docker-compose syntax
+        env:
+          # Placeholder values just to satisfy compose's "required" interpolation checks.
+          # docker compose config doesn't actually launch anything.
+          CIVICSEAL_DOMAIN: ci.example.local
+          POSTGRES_PASSWORD: ci-test-only-password
+          SESSION_SECRET: ci-test-only-session-secret-32-chars-min
+          SIGNED_LINK_SECRET: ci-test-only-signed-link-secret-32-chars
+          EMAIL_FROM: "GNPS Civic Readiness <ci@example.local>"
         run: |
           docker compose -f docker-compose.yml config > /dev/null
           echo "✓ docker-compose.yml is valid"
