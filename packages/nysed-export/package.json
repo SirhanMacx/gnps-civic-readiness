@@ -1,0 +1,10 @@
+{
+  "name": "@gnps-civic/nysed-export",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" },
+  "dependencies": { "pdf-lib": "^1.17.1", "fflate": "^0.8.2" },
+  "devDependencies": { "typescript": "^5.6.0", "vitest": "^2.1.0" }
+}
