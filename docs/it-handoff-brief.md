@@ -111,12 +111,14 @@ The system already accepts IC data and auto-counts the Civic Knowledge column. T
 **The format we need from IC** (one row per student × course-or-exam):
 
 ```
-student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit
-GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2025-2026,passed
-GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2026-06-15,87
-GN20275511,Chen,David,2027,course,AP_US_GOV,2026-2027,passed
+student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit,safety_net_applied
+GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2025-2026,passed,
+GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2026-06-15,87,false
+GN20275511,Chen,David,2027,course,AP_US_GOV,2026-2027,passed,
 …
 ```
+
+The final `safety_net_applied` field is Regents-only. It should be `true` when IC marks a safety-net, special-appeal, or 45-variance case that NYSED allows to count for the 1c proficiency point.
 
 A counselor (or admin) drops this CSV at `/admin/import` (UI is live now). The system parses, validates, shows a diff (new / updated / unchanged), and commits. From that moment forward, the cohort roster auto-populates.
 

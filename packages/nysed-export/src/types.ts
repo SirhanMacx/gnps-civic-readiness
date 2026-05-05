@@ -6,7 +6,7 @@
  * package stays pure TypeScript and trivially unit-testable.
  *
  * Source of truth for field semantics: NYSED Seal of Civic Readiness Manual
- * (Updated 2024) and the portal design spec at
+ * (Updated March 2025) and the portal design spec at
  * docs/superpowers/specs/2026-05-04-gnps-civic-readiness-portal-design.md.
  */
 
@@ -25,9 +25,9 @@ export interface StudentRow {
 	 * enum the SvelteKit app evolves.
 	 */
 	status: string;
-	/** Civic-knowledge subtotal (max 3.0 per NYSED). */
+	/** Civic-knowledge subtotal. NYSED requires at least 2.0 points here. */
 	knowledge: number;
-	/** Civic-participation subtotal (max 3.0 per NYSED). */
+	/** Civic-participation subtotal. NYSED requires at least 2.0 points here. */
 	participation: number;
 	/** knowledge + participation. */
 	total: number;
@@ -58,8 +58,9 @@ export interface RegentsRow {
 	score: number;
 	examDate: string;
 	/**
-	 * True iff the student qualified via the Regents safety-net designation
-	 * rather than scoring at the Proficiency or Mastery threshold directly.
+ * True iff the student qualified via Regents safety-net, special appeal, or
+ * 45-variance handling rather than scoring at the Proficiency or Mastery
+ * threshold directly.
 	 */
 	safetyNet: boolean;
 }

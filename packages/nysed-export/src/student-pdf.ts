@@ -11,7 +11,8 @@
  * no Svelte runtime.
  */
 
-import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import type { PDFFont, PDFPage } from 'pdf-lib';
 import type {
 	AuditRow,
 	EnrollmentRow,
@@ -65,7 +66,7 @@ function safeWinAnsi(s: string): string {
 }
 
 function regentsLevel(score: number, safetyNet: boolean): string {
-	if (safetyNet) return 'Safety-Net';
+	if (safetyNet) return 'Safety-Net / Appeal';
 	if (score >= 85) return 'Mastery';
 	if (score >= 65) return 'Proficiency';
 	return 'Below Proficiency';
@@ -347,7 +348,7 @@ function drawAuditExcerpt(
 
 function drawFooter(page: PDFPage, fonts: FontPair): void {
 	const today = new Date().toISOString().slice(0, 10);
-	const text = `Generated ${today}  ·  Source of truth: NYSED Seal of Civic Readiness Manual (Updated 2024)`;
+	const text = `Generated ${today}  ·  Source of truth: NYSED Seal of Civic Readiness Manual (Updated March 2025)`;
 	drawText(page, text, MARGIN, 24, 8, fonts.regular, MUTED);
 }
 

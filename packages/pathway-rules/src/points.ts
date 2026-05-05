@@ -8,7 +8,7 @@
  *   - 1a: ssCreditsPassed ≥ 4 → +1 knowledge (one-shot)
  *   - 1b: each Regents ≥ 85 → +1.5 knowledge
  *   - 1c: each Regents 65-84 → +1 knowledge
- *         each Regents 55-64 with safetyNet=true → +1 knowledge
+ *         each Regents 45-64 with safetyNet=true → +1 knowledge
  *   - 1d: advancedSsCount × 0.5 knowledge
  *
  * Awarded-submission rules:
@@ -23,8 +23,8 @@ export interface RegentsScore {
   readonly exam: 'GLOBAL_II' | 'US_HISTORY';
   readonly score: number;
   /**
-   * IEP/504 testing-accommodations safety-net flag. When true, a score in
-   * the 55-64 range counts as proficiency (NYSED policy).
+   * IEP/504 safety-net, special-appeal, or 45-variance flag. When true,
+   * a score in the 45-64 range counts as proficiency (NYSED FAQ).
    */
   readonly safetyNet: boolean;
 }
@@ -53,7 +53,7 @@ export interface PointTotals {
 
 const REGENTS_MASTERY_THRESHOLD = 85;
 const REGENTS_PROFICIENCY_THRESHOLD = 65;
-const REGENTS_SAFETY_NET_THRESHOLD = 55;
+const REGENTS_SAFETY_NET_THRESHOLD = 45;
 
 export function computePoints(ev: StudentEvidence): PointTotals {
   let knowledge = 0;

@@ -170,19 +170,32 @@ const {
 describe('parseIcCsv', () => {
   beforeEach(() => reset());
 
-  it('accepts valid 5-column rows (one of each kind)', () => {
+  it('accepts valid rows with optional Regents safety-net / appeal flag', () => {
     const csv = [
-      'student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit',
-      'GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2024-2025,passed',
-      'GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2025-06-15,87',
-      'GN20271234,Goldberg,Maya,2027,demographic,,,'
+      'student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit,safety_net_applied',
+      'GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2024-2025,passed,',
+      'GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2025-06-15,87,false',
+      'GN20271234,Goldberg,Maya,2027,regents,US_HISTORY,2026-06-15,45,yes',
+      'GN20271234,Goldberg,Maya,2027,demographic,,,,'
     ].join('\n');
     const { rows, errors } = parseIcCsv(csv);
     expect(errors).toHaveLength(0);
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(4);
     expect(rows[0]).toMatchObject({ kind: 'course', code: 'SS_GLOBAL_II', scoreOrCredit: 'passed' });
-    expect(rows[1]).toMatchObject({ kind: 'regents', code: 'GLOBAL_II', scoreOrCredit: '87' });
-    expect(rows[2]).toMatchObject({ kind: 'demographic' });
+    expect(rows[1]).toMatchObject({ kind: 'regents', code: 'GLOBAL_II', scoreOrCredit: '87', safetyNetApplied: false });
+    expect(rows[2]).toMatchObject({ kind: 'regents', code: 'US_HISTORY', scoreOrCredit: '45', safetyNetApplied: true });
+    expect(rows[3]).toMatchObject({ kind: 'demographic' });
+  });
+
+  it('rejects malformed safety_net_applied values on regents rows', () => {
+    const csv = [
+      'student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit,safety_net_applied',
+      'GN1,Smith,A,2027,regents,GLOBAL_II,2025-06-15,60,maybe'
+    ].join('\n');
+    const { rows, errors } = parseIcCsv(csv);
+    expect(rows).toHaveLength(0);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].reason).toMatch(/safety_net_applied/);
   });
 
   it('rejects malformed dates on regents rows', () => {
@@ -285,9 +298,9 @@ describe('commitImport', () => {
     ensure('course_catalog').rows.push({ id: 42, course_code: 'SS_GLOBAL_II' });
 
     const csv = [
-      'student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit',
-      'GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2024-2025,passed',
-      'GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2025-06-15,87'
+      'student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit,safety_net_applied',
+      'GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2024-2025,passed,',
+      'GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2025-06-15,60,true'
     ].join('\n');
     const { rows, errors } = parseIcCsv(csv);
     expect(errors).toHaveLength(0);
@@ -315,6 +328,14 @@ describe('commitImport', () => {
       course_id: 42,
       school_year: '2024-2025',
       credit_status: 'passed'
+    });
+
+    const regentsUps = ensure('regents_scores').upserts;
+    expect(regentsUps[0]?.[0]).toMatchObject({
+      student_id: 'GN20271234',
+      exam_code: 'GLOBAL_II',
+      score: 60,
+      safety_net_applied: true
     });
 
     // Audit log row.

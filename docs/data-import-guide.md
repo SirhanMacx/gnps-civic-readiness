@@ -4,15 +4,15 @@ The portal auto-counts five SIS-derived pathways (1a, 1b, 1c, 1d, 2c) from data 
 
 ## CSV format
 
-One row per (student, course-or-exam) pair. UTF-8 encoded, RFC 4180 (commas as separators, double-quotes for escaping).
+One row per (student, course-or-exam) pair. UTF-8 encoded, RFC 4180 (commas as separators, double-quotes for escaping). The `safety_net_applied` column is recommended; if it is omitted, the importer defaults Regents rows to `false`.
 
 ```csv
-student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit
-GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2024-2025,passed
-GN20271234,Goldberg,Maya,2027,course,SS_US_HISTORY,2025-2026,passed
-GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2025-06-15,87
-GN20271234,Goldberg,Maya,2027,regents,US_HISTORY,2026-06-12,91
-GN20271234,Goldberg,Maya,2027,course,AP_US_GOV,2026-2027,in_progress
+student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit,safety_net_applied
+GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2024-2025,passed,
+GN20271234,Goldberg,Maya,2027,course,SS_US_HISTORY,2025-2026,passed,
+GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2025-06-15,87,false
+GN20271234,Goldberg,Maya,2027,regents,US_HISTORY,2026-06-12,45,true
+GN20271234,Goldberg,Maya,2027,course,AP_US_GOV,2026-2027,in_progress,
 ```
 
 ## Field reference
@@ -27,6 +27,7 @@ GN20271234,Goldberg,Maya,2027,course,AP_US_GOV,2026-2027,in_progress
 | `code` | text | For `course`: course code matching `course_catalog.course_code`. For `regents`: `GLOBAL_II` or `US_HISTORY`. |
 | `year_or_date` | text | For `course`: school year `YYYY-YYYY` (e.g. `2025-2026`). For `regents`: ISO date (e.g. `2026-06-12`). |
 | `score_or_credit` | text | For `course`: `passed`, `failed`, or `in_progress`. For `regents`: integer 0–100. |
+| `safety_net_applied` | optional boolean | Regents rows only. Use `true` when IC marks a safety-net, special-appeal, or 45-variance case that should count as 1 point under NYSED guidance. Blank/false for course rows and standard Regents rows. |
 
 ## Sample IC export workflow
 
@@ -48,6 +49,7 @@ The importer rejects rows that:
 - Have an unknown `kind` (anything other than `course`, `regents`, `demographic`)
 - Reference a `code` that's not in the course catalog (for `course` kind)
 - Have a Regents score outside 0–100
+- Have an invalid `safety_net_applied` value; accepted values are blank, `true`/`false`, `yes`/`no`, or `1`/`0`
 - Have an invalid date format
 - Have an unknown `credit_status` value
 

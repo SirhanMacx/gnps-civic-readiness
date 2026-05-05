@@ -18,7 +18,7 @@ This portal does it differently: a public submission landing page (mirrors distr
 
 ## Status
 
-**Phase 1 — pilot, in active development.** The live demo accepts service-learning submissions today; remaining pathway forms, staff portals, and NYSED export are landing on rolling deploys. **Phase 2** (live Infinite Campus integration, district SSO, student-facing progress portal) is deferred until district IT review.
+**Phase 1 — pilot, feature-complete demo.** The live demo includes public evidence intake for all non-SIS pathways, staff review queues, Infinite Campus CSV import, roster point calculation, and NYSED audit-pack export. **Phase 2** (live Infinite Campus integration, district SSO, student-facing progress portal, transcript write-back) is deferred until district IT review.
 
 ## How it works
 
@@ -104,6 +104,7 @@ Open http://localhost:5173 — the GNPS-themed landing page should load.
 
 | Doc | Audience |
 |---|---|
+| [Project goal & rollout plan](docs/project-goal-and-rollout-plan.md) | Social Studies leadership, district IT, project sponsors |
 | [Design document](dist/GNPS-Civic-Readiness-Portal-Design.pdf) | Leadership, architects, anyone evaluating the system |
 | [IT-handoff brief](dist/GNPS-IT-Handoff-Brief.pdf) | District technology departments |
 | [docs/deployment-guide.md](docs/deployment-guide.md) | Engineers deploying for a district |
@@ -118,6 +119,6 @@ Open http://localhost:5173 — the GNPS-themed landing page should load.
 
 ## Acknowledgments
 
-Built on top of NYSED's [Seal of Civic Readiness Manual (Updated 2024)](https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual). Peer-district approaches reviewed during design: Seaford, 3 Village CSD, Connetquot. Round logo and brand palette: Great Neck Public Schools.
+Built on top of NYSED's [Seal of Civic Readiness Manual (Updated March 2025)](https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual) and current NYSED FAQ/reporting guidance. Peer-district approaches reviewed during design: Seaford, Three Village CSD, Connetquot. Round logo and brand palette: Great Neck Public Schools.
 
 Built for Great Neck Public Schools — Social Studies Department · 2026.

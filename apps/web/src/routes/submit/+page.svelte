@@ -28,4 +28,4 @@
   {/each}
 </div>
 
-<p class="text-xs text-muted mt-8">Pilot status: this portal is in Phase 1. Service-learning submissions are live now; remaining pathways come online over the next few weeks. Questions: <a href="mailto:civicseal@greatneck.k12.ny.us" class="text-primary hover:underline">civicseal@greatneck.k12.ny.us</a></p>
+<p class="text-xs text-muted mt-8">Pilot status: Phase 1 evidence intake is live for all listed pathways. Staff review, Infinite Campus CSV import, and year-end export run behind staff login. Questions: <a href="mailto:civicseal@greatneck.k12.ny.us" class="text-primary hover:underline">civicseal@greatneck.k12.ny.us</a></p>

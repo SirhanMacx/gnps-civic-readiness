@@ -45,6 +45,8 @@ export interface ApprovalQueueItem {
   /** Hours-pathway specifics (null for project pathways). */
   hoursTotal: number | null;
   hoursConfirmed: boolean | null;
+  canApprove: boolean;
+  approvalBlockers: string[];
   domainTags: string[];
   evidenceFiles: Array<{
     id: number;
@@ -112,6 +114,49 @@ function summarizeHours(hours: any[]): RawHoursAgg {
     if (h.organization && !organization) organization = h.organization as string;
   }
   return { total, hasUnconfirmed, hasConfirmed, description, organization };
+}
+
+function approvalBlockersFor(args: {
+  pathwayType: string;
+  hours: RawHoursAgg | null;
+  points: number;
+}): string[] {
+  const blockers: string[] = [];
+  const defaultPoints = defaultPointsFor(args.pathwayType);
+  if (defaultPoints > 0 && args.points > defaultPoints) {
+    blockers.push(`Cannot award more than ${defaultPoints} point${defaultPoints === 1 ? '' : 's'} for this pathway instance.`);
+  }
+  if (args.points <= 0) {
+    blockers.push('Use decline or request revision instead of awarding zero points.');
+  }
+
+  if (args.pathwayType === 'service_learning') {
+    if (!args.hours) {
+      blockers.push('Missing service-hour log.');
+    } else {
+      if (args.hours.total < 25) {
+        blockers.push('Service-learning requires at least 25 confirmed hours.');
+      }
+      if (args.hours.hasUnconfirmed || !args.hours.hasConfirmed) {
+        blockers.push('All service-learning hours must be supervisor-confirmed first.');
+      }
+    }
+  }
+
+  if (args.pathwayType === 'wbl_extracurr') {
+    if (!args.hours) {
+      blockers.push('Missing extracurricular / work-based-learning hour log.');
+    } else {
+      if (args.hours.total < 40) {
+        blockers.push('Extracurricular / work-based learning requires at least 40 confirmed hours.');
+      }
+      if (args.hours.hasUnconfirmed || !args.hours.hasConfirmed) {
+        blockers.push('All extracurricular / work-based-learning hours must be supervisor-confirmed first.');
+      }
+    }
+  }
+
+  return blockers;
 }
 
 function buildClaim(args: {
@@ -258,6 +303,11 @@ export async function listApprovalQueue(opts: {
       storagePath: f.storage_path as string,
       kind: f.kind as string,
     }));
+    const blockers = approvalBlockersFor({
+      pathwayType: s.pathway_type as string,
+      hours: hoursAgg,
+      points: defaultPointsFor(s.pathway_type as string),
+    });
     return {
       submissionId: s.id as number,
       studentId: stu.id,
@@ -281,6 +331,8 @@ export async function listApprovalQueue(opts: {
       hoursConfirmed: hoursAgg
         ? hoursAgg.hasConfirmed && !hoursAgg.hasUnconfirmed
         : null,
+      canApprove: blockers.length === 0,
+      approvalBlockers: blockers,
       domainTags: (s.domain_tags as string[] | null) ?? [],
       evidenceFiles: files,
     };
@@ -314,14 +366,14 @@ export interface DeclineInput {
  * descriptive error rather than silently overwriting a 'rejected' row.
  */
 export async function approveSubmission(input: ApproveInput): Promise<void> {
-  if (!Number.isFinite(input.points) || input.points < 0) {
-    throw new Error('points must be a non-negative finite number');
+  if (!Number.isFinite(input.points) || input.points <= 0) {
+    throw new Error('points must be a positive finite number');
   }
   const sb = supabaseAdmin();
 
   const { data: existing, error: eFetch } = await sb
     .from('pathway_submissions')
-    .select('id, status, pathway_type')
+    .select('id, student_id, status, pathway_type')
     .eq('id', input.submissionId)
     .maybeSingle();
   if (eFetch) throw new Error(`pathway_submissions.select failed: ${eFetch.message}`);
@@ -330,6 +382,29 @@ export async function approveSubmission(input: ApproveInput): Promise<void> {
     throw new Error(
       `submission ${input.submissionId} cannot be approved from status='${existing.status}'`,
     );
+  }
+  const defaultPoints = defaultPointsFor(existing.pathway_type as string);
+  if (defaultPoints > 0 && input.points > defaultPoints) {
+    throw new Error(
+      `cannot award ${input.points} points for ${existing.pathway_type}; max per instance is ${defaultPoints}`,
+    );
+  }
+
+  if (['service_learning', 'wbl_extracurr'].includes(existing.pathway_type as string)) {
+    const { data: hoursRaw, error: eHours } = await sb
+      .from('hours_log')
+      .select('hours, confirmation_status')
+      .eq('submission_id', input.submissionId);
+    if (eHours) throw new Error(`hours_log.select failed: ${eHours.message}`);
+    const hoursAgg = summarizeHours(hoursRaw ?? []);
+    const blockers = approvalBlockersFor({
+      pathwayType: existing.pathway_type as string,
+      hours: hoursAgg,
+      points: input.points,
+    });
+    if (blockers.length > 0) {
+      throw new Error(blockers.join(' '));
+    }
   }
 
   const nowIso = new Date().toISOString();

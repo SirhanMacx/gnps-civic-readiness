@@ -57,7 +57,7 @@
         <h3 class="font-display text-lg text-primary">Proficiency on a Social Studies Regents</h3>
         <span class="font-display font-semibold text-secondary">1 pt · repeatable</span>
       </div>
-      <p class="text-sm text-muted">Score <strong>65–84</strong> on Global II or US History Regents. Counts even with safety-net scores (55–64) if you have an IEP or 504 accommodation.</p>
+      <p class="text-sm text-muted">Score <strong>65–84</strong> on Global II or US History Regents. Approved safety-net, special-appeal, and 45-variance cases also count when school records mark them as eligible.</p>
       <p class="text-xs text-muted mt-2 italic">Auto-counted.</p>
     </article>
 
@@ -224,5 +224,5 @@
 </div>
 
 <p class="text-xs text-muted mt-12 max-w-3xl">
-  Source of truth: <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-information" class="text-primary hover:underline">NYSED · Seal of Civic Readiness Information</a> · <a href="https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness" class="text-primary hover:underline">Criteria</a> · <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual" class="text-primary hover:underline">Handbook (Updated 2024)</a>. The portal implements all 11 pathways defined in the handbook.
+  Source of truth: <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-information" class="text-primary hover:underline">NYSED · Seal of Civic Readiness Information</a> · <a href="https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness" class="text-primary hover:underline">Criteria</a> · <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual" class="text-primary hover:underline">Manual (Updated March 2025)</a>. The portal implements all 11 pathways defined in the manual.
 </p>

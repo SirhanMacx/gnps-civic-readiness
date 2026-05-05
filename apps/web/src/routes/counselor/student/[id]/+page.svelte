@@ -335,8 +335,8 @@
                   Mastery (+1.5)
                 {:else if r.score >= 65}
                   Proficiency (+1)
-                {:else if r.safetyNetApplied && r.score >= 55}
-                  Safety-net (+1)
+                {:else if r.safetyNetApplied && r.score >= 45}
+                  Safety-net / appeal (+1)
                 {:else}
                   Below
                 {/if}

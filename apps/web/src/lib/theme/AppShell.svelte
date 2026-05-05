@@ -35,7 +35,7 @@
 
   <!-- Main district header · matches GNPS brand chrome (navy block, round logo, district name). -->
   <header class="bg-primary text-white shadow-sm">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
       <a href="/" class="flex items-center gap-3 font-display group" aria-label="GNPS Civic Readiness · Home">
         <img src={logoUrl} alt="GNPS" width="48" height="48" class="rounded-full bg-white p-0.5 shadow-sm" loading="eager" />
         <div class="flex flex-col leading-tight">
@@ -44,7 +44,7 @@
         </div>
       </a>
 
-      <nav class="ml-auto flex gap-5 text-sm font-display font-medium items-center" aria-label="Main">
+      <nav class="w-full sm:w-auto sm:ml-auto flex flex-wrap gap-3 sm:gap-5 text-xs sm:text-sm font-display font-medium items-center" aria-label="Main">
         <a href="/" class="hover:underline opacity-90 hover:opacity-100">Home</a>
         <a href="/submit" class="hover:underline opacity-90 hover:opacity-100">Submit Evidence</a>
         <a href="/about" class="hover:underline opacity-90 hover:opacity-100 hidden sm:inline">How it Works</a>
@@ -55,7 +55,7 @@
           </span>
           <a href="/logout" class="hover:underline opacity-90 hover:opacity-100" data-testid="logout-link">Logout</a>
         {:else}
-          <a href="/login" class="btn btn-on-primary text-xs">Staff Login</a>
+          <a href="/login" class="btn btn-on-primary text-xs px-3 py-2 sm:px-6 sm:py-3.5">Staff Login</a>
         {/if}
       </nav>
     </div>

@@ -9,7 +9,13 @@ Forwardable artifacts in this folder, in suggested reading order:
   04 — IT Runbook                        — full deployment + ops procedures
   05 — Infinite Campus Integration       — IC wiring guide for SIS team
   06 — Teacher Quick-Push Workflow       — onboarding doc for teachers
-  07 — Sample IC CSV                     — exact format the importer expects
+  07 — Sample IC CSV                     — exact format the importer expects,
+                                          including the Regents safety-net /
+                                          appeal / 45-variance flag
+
+Current source docs also include:
+  docs/project-goal-and-rollout-plan.md  — project goal, research baseline,
+                                          IC auto-population split, rollout
 
 Source code (MIT, public): https://github.com/SirhanMacx/gnps-civic-readiness
 Latest release:            https://github.com/SirhanMacx/gnps-civic-readiness/releases/tag/v0.2.0

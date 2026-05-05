@@ -29,8 +29,8 @@ The Civic Knowledge column accounts for ~50–80% of the points a typical GNPS s
 | Course year (e.g. 2025-2026) | Disambiguates retakes / multi-year courses | YYYY-YYYY format |
 | Credit status (passed / failed / in_progress) | 1a only counts when `passed` | |
 | Regents exam name | Identifies which exam | We need: Global History & Geography II, US History & Government |
-| Regents score (0–100) | Pathway 1b / 1c | 85+ = mastery (1.5pt), 65–84 = proficiency (1pt), 55–64 with safety-net flag = also proficiency |
-| Regents accommodation flag | IEP / 504 safety-net handling | Per NYSED: students with accommodations who score 55–64 still earn the proficiency point |
+| Regents score (0–100) | Pathway 1b / 1c | 85+ = mastery (1.5pt), 65–84 = proficiency (1pt), approved safety-net / special-appeal / 45-variance cases = proficiency (1pt) |
+| Regents safety-net / appeal / variance flag | Lower-score Regents handling | Per current NYSED FAQ, students eligible for 55–64 safety nets and 45 variances earn one point per applicable exam |
 
 **Optional but useful:**
 - Counselor-of-record (assigns student to a counselor's caseload in the portal)
@@ -103,11 +103,13 @@ This is the cleanest long-term path but requires the most coordination (vendor l
 
 One row per `(student × course-or-exam)` pair. UTF-8, comma-separated, RFC 4180 escaping.
 
-### Required header (exact, case-sensitive)
+### Recommended header (exact, case-sensitive)
 
 ```csv
-student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit
+student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit,safety_net_applied
 ```
+
+The importer also accepts the older eight-column header without `safety_net_applied`; Regents rows then default to `false`.
 
 ### Field definitions
 
@@ -121,16 +123,18 @@ student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit
 | `code` | text | For `course`: a course code that matches `course_catalog.course_code`. For `regents`: `GLOBAL_II` or `US_HISTORY`. For `demographic`: ignored. |
 | `year_or_date` | text | For `course`: school year as `YYYY-YYYY` (e.g. `2025-2026`). For `regents`: ISO date `YYYY-MM-DD`. |
 | `score_or_credit` | text | For `course`: `passed`, `failed`, or `in_progress`. For `regents`: integer 0–100. |
+| `safety_net_applied` | optional boolean | Regents rows only. `true` when IC marks a safety-net, special-appeal, or 45-variance case that should count as 1 point. Blank/false otherwise. If the column is omitted, the importer defaults to false. |
 
 ### Example
 
 ```csv
-student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit
-GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_I,2024-2025,passed
-GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2025-2026,passed
-GN20271234,Goldberg,Maya,2027,course,SS_US_HISTORY,2026-2027,in_progress
-GN20271234,Goldberg,Maya,2027,course,AP_US_GOV,2026-2027,passed
-GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2026-06-15,87
+student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit,safety_net_applied
+GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_I,2024-2025,passed,
+GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2025-2026,passed,
+GN20271234,Goldberg,Maya,2027,course,SS_US_HISTORY,2026-2027,in_progress,
+GN20271234,Goldberg,Maya,2027,course,AP_US_GOV,2026-2027,passed,
+GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2026-06-15,87,false
+GN20271234,Goldberg,Maya,2027,regents,US_HISTORY,2027-06-12,45,true
 ```
 
 A working example is committed at [`docs/sample-ic-data.csv`](sample-ic-data.csv).
@@ -142,6 +146,7 @@ The importer rejects:
 - Rows where `code` (for `course` kind) isn't in `course_catalog`
 - Rows with malformed dates or year strings
 - Rows where Regents `score_or_credit` isn't a 0–100 integer
+- Rows where optional `safety_net_applied` is not blank, `true`/`false`, `yes`/`no`, or `1`/`0`
 - Rows where `credit_status` (course) isn't `passed`/`failed`/`in_progress`
 
 The preview UI shows rejected rows with explanations. The admin must fix and re-upload (or skip and let those rows fall through).
@@ -206,6 +211,7 @@ This is the IC-side query you'd build to produce the CSV. Adjust slightly based 
 - `assessment.testCode` mapped: `RCT-Global` and `RR Global History` → `GLOBAL_II`, `RR US History` → `US_HISTORY` (alias: `code`)
 - `assessment.testDate` as `YYYY-MM-DD` (alias: `year_or_date`)
 - `assessment.score` (alias: `score_or_credit`)
+- Safety-net / appeal / 45-variance flag as `true` or `false` (alias: `safety_net_applied`)
 
 **Filters:**
 - Test code matches Global History & Geography or US History Regents codes
@@ -243,8 +249,8 @@ Once Path B (SFTP) lands, this becomes nightly automatic.
 **Fix:** Per NYSED, prior-district credits count if approved by the district superintendent. The portal trusts the import — if IC has the data, it's counted. If you need to flag transfers for SCRC review, add a `transferred_in_date` to the student record (already in schema; just isn't auto-populated from IC by default).
 
 ### Safety-net Regents scores
-**Problem:** A student with an IEP scores 58 on Global History II. IC reports the score; we need to know if it's a safety-net pass.
-**Fix:** The CSV format includes `safety_net_applied` as a fifth field on Regents rows in the CURRENT schema (`regents_scores.safety_net_applied boolean`). Add it to the IC report mapping if your IC instance stores accommodation flags on assessments. If not, the portal defaults to `false` and you can manually flip the flag via psql for affected students.
+**Problem:** A student scores below 65 on Global History II, but NYSED allows the exam to count because of a safety net, special appeal, or 45-variance case.
+**Fix:** The CSV format includes `safety_net_applied` for Regents rows and stores it in `regents_scores.safety_net_applied boolean`. Add the matching IC field to the report mapping. If your IC instance cannot export it, the portal defaults to `false` and an admin must correct affected rows before final audit export.
 
 ### Course retakes
 **Problem:** A student fails Global II in 10th grade, retakes in 11th. The CSV has two rows.
@@ -317,7 +323,7 @@ The IC integration moves student-record data from one FERPA-covered system (IC) 
 
 Specific considerations:
 
-- **Data minimization.** We pull only the fields in §1. We don't pull addresses, IEP details (only the safety-net flag for Regents scoring), discipline, attendance.
+- **Data minimization.** We pull only the fields in §1. We don't pull addresses, IEP details, discipline, or attendance; the import stores only the yes/no Regents safety-net / appeal / variance flag needed for point calculation.
 - **Access control.** Only counselors, SCRC committee members, and admins can see student records in the portal. Each access is logged to `audit_log`.
 - **Retention.** The portal retains student records as long as the seal program runs + district records-retention policy (typically 7 years post-graduation for FERPA). Decommissioning procedure in the IT runbook.
 - **Disclosure.** The portal does not share data with any third party. Even the Vercel/Supabase Phase 1 deploy was a directory-information processor under FERPA's school-official exception with vendor DPAs in place. Self-hosted Phase 2 keeps everything inside GNPS.
@@ -387,7 +393,7 @@ When you have your first conversation about wiring this up, here's what to ask:
 2. If yes — what's the OAuth2 client setup procedure for our admin to provision credentials?
 3. What's the IC field name for `student.localStudentNumber` (or whatever GNPS uses as the canonical student ID)?
 4. Is the Regents score table queryable via Ad Hoc Reporting, or does it require the State Reporting module?
-5. Where (which IC field) is the safety-net / accommodation flag stored on Regents assessments?
+5. Where (which IC field) is the safety-net / special-appeal / 45-variance flag stored on Regents assessments?
 6. Does IC have a **Custom Report Scheduler** for nightly SFTP delivery? What's the SFTP target setup process?
 7. What's the cadence on IC's data refresh — when does a transferred-in student show up in IC?
 8. Does GNPS use IC's `gradYear` field consistently, or is grad cohort tracked elsewhere?
@@ -399,4 +405,4 @@ When you have those answers, the integration is straightforward. Until then, Pat
 ## 11. Contact
 
 Questions on this integration: civicseal@greatneck.k12.ny.us
-NYSED reference: [Seal of Civic Readiness Manual (Updated 2024)](https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual)
+NYSED reference: [Seal of Civic Readiness Manual (Updated March 2025)](https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual)

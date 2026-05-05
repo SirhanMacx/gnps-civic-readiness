@@ -153,6 +153,17 @@
             </div>
           {/if}
 
+          {#if item.approvalBlockers.length > 0}
+            <div class="rounded border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-950">
+              <p class="font-display font-semibold">Cannot award yet</p>
+              <ul class="mt-1 list-disc pl-5 space-y-0.5">
+                {#each item.approvalBlockers as blocker}
+                  <li>{blocker}</li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+
           {#if item.domainTags.length > 0}
             <div class="flex flex-wrap gap-1.5">
               {#each item.domainTags as t}
@@ -217,7 +228,8 @@
             <button
               type="button"
               on:click={() => setOpen(item.submissionId, openAction[item.submissionId] === 'approve' ? null : 'approve')}
-              class="btn btn-primary"
+              disabled={!item.canApprove}
+              class={`btn btn-primary ${item.canApprove ? '' : 'opacity-50 cursor-not-allowed'}`}
             >
               Approve · award {item.defaultPoints} pt{item.defaultPoints === 1 ? '' : 's'}
             </button>

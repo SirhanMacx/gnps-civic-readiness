@@ -14,6 +14,23 @@
   </div>
 </section>
 
+<section class="grid md:grid-cols-2 gap-5 mb-12">
+  <div class="border border-border rounded-lg p-5 bg-white">
+    <p class="text-xs uppercase tracking-widest text-secondary font-display font-semibold mb-2">Auto-populated from school records</p>
+    <h2 class="font-display text-xl text-primary mb-2">Courses and Regents scores</h2>
+    <p class="text-sm text-muted leading-relaxed">
+      Social studies credits, approved advanced courses, civic-engagement electives, and Global II / US History Regents results come from Infinite Campus imports. Students do not re-enter transcript data.
+    </p>
+  </div>
+  <div class="border border-border rounded-lg p-5 bg-white">
+    <p class="text-xs uppercase tracking-widest text-secondary font-display font-semibold mb-2">Submitted here</p>
+    <h2 class="font-display text-xl text-primary mb-2">Hours, projects, reflections</h2>
+    <p class="text-sm text-muted leading-relaxed">
+      Service-learning, work-based learning, civic projects, research, capstones, and required reflection evidence are collected through this portal, then verified by supervisors, counselors, and the Civic Readiness Committee.
+    </p>
+  </div>
+</section>
+
 <section class="grid md:grid-cols-2 gap-6 mb-12">
   <div class="border border-border rounded-lg p-6 bg-surface">
     <h2 class="font-display text-xl text-primary mb-2">Civic Knowledge</h2>
@@ -47,5 +64,5 @@
 </section>
 
 <section class="text-xs text-muted mt-16 pt-6 border-t border-border">
-  Source: <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-information" class="text-primary hover:underline">NYSED · Seal of Civic Readiness Information</a> · <a href="https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness" class="text-primary hover:underline">Criteria</a> · <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual" class="text-primary hover:underline">Handbook (Updated 2024)</a>
+  Source: <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-information" class="text-primary hover:underline">NYSED · Seal of Civic Readiness Information</a> · <a href="https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness" class="text-primary hover:underline">Criteria</a> · <a href="https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual" class="text-primary hover:underline">Manual (Updated March 2025)</a>
 </section>

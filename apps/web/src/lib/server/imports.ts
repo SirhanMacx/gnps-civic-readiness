@@ -25,6 +25,10 @@
  *       * course      → "passed" | "failed" | "in_progress"
  *       * regents     → integer 0–100
  *       * demographic → ignored (left blank; we only read student-name fields)
+ *   - safety_net_applied (optional):
+ *       * regents     → true if IC marks a safety-net pass, special appeal,
+ *                       or 45-variance case that NYSED says earns 1 point
+ *       * course/demo → ignored
  */
 
 import Papa from 'papaparse';
@@ -49,6 +53,8 @@ export interface ParsedRow {
   yearOrDate: string;
   /** Free-form: passed|failed|in_progress|<int 0-100>|<empty>. */
   scoreOrCredit: string;
+  /** Regents-only flag for safety-net / special-appeal / 45-variance credit. */
+  safetyNetApplied: boolean;
 }
 
 export interface ImportError {
@@ -98,6 +104,14 @@ const VALID_CREDIT = new Set(['passed', 'failed', 'in_progress']);
 const SCHOOL_YEAR_RE = /^\d{4}-\d{4}$/;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const STUDENT_ID_RE = /^[A-Za-z0-9_-]+$/;
+
+function parseOptionalBoolean(raw: string): boolean | null {
+  const normalized = raw.trim().toLowerCase();
+  if (!normalized) return false;
+  if (['true', 't', 'yes', 'y', '1'].includes(normalized)) return true;
+  if (['false', 'f', 'no', 'n', '0'].includes(normalized)) return false;
+  return null;
+}
 
 /**
  * Parse a raw IC CSV string. Returns clean rows + per-row errors. Header order
@@ -152,6 +166,8 @@ export function parseIcCsv(text: string): ParseResult {
     const code = get('code');
     const yearOrDate = get('year_or_date');
     const scoreOrCredit = get('score_or_credit').toLowerCase();
+    const safetyNetRaw = get('safety_net_applied');
+    const safetyNetApplied = parseOptionalBoolean(safetyNetRaw);
 
     if (!studentId) {
       errors.push({ row: rowNumber, reason: 'student_id is required' });
@@ -234,6 +250,13 @@ export function parseIcCsv(text: string): ParseResult {
         });
         return;
       }
+      if (safetyNetApplied === null) {
+        errors.push({
+          row: rowNumber,
+          reason: `safety_net_applied "${safetyNetRaw}" must be true/false, yes/no, or 1/0`
+        });
+        return;
+      }
     }
     // demographic: code/year_or_date/score_or_credit all unused; left untouched.
 
@@ -246,7 +269,8 @@ export function parseIcCsv(text: string): ParseResult {
       kind,
       code,
       yearOrDate,
-      scoreOrCredit
+      scoreOrCredit,
+      safetyNetApplied: kind === 'regents' ? Boolean(safetyNetApplied) : false
     });
   });
 
@@ -276,6 +300,7 @@ interface ExistingRegents {
   exam_code: string;
   exam_date: string;
   score: number;
+  safety_net_applied: boolean;
 }
 
 /**
@@ -309,7 +334,7 @@ export async function previewImport(rows: readonly ParsedRow[]): Promise<Preview
       ? Promise.resolve({ data: [] as ExistingRegents[], error: null })
       : sb
           .from('regents_scores')
-          .select('student_id, exam_code, exam_date, score')
+          .select('student_id, exam_code, exam_date, score, safety_net_applied')
           .in('student_id', studentIds)
   ]);
 
@@ -387,7 +412,7 @@ export async function previewImport(rows: readonly ParsedRow[]): Promise<Preview
       const exist = regentsByKey.get(key);
       const score = Number(row.scoreOrCredit);
       if (!exist) kindDelta = 'new';
-      else if (exist.score !== score) kindDelta = 'updated';
+      else if (exist.score !== score || Boolean(exist.safety_net_applied) !== row.safetyNetApplied) kindDelta = 'updated';
       else kindDelta = 'unchanged';
     } else {
       // demographic: only the student row matters.
@@ -518,7 +543,7 @@ export async function commitImport(
     exam_code: r.code,
     exam_date: r.yearOrDate,
     score: Number(r.scoreOrCredit),
-    safety_net_applied: false // No safety-net flag in CSV format yet; admin can edit later.
+    safety_net_applied: r.safetyNetApplied
   }));
   let regentsUpserted = 0;
   if (regentsInserts.length > 0) {

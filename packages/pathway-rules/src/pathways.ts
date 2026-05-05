@@ -23,7 +23,7 @@
 export type PathwayId =
   | 'four_ss_credits' // 1a — 4 credits of social studies
   | 'regents_mastery' // 1b — Regents ≥85 on Global II or US History
-  | 'regents_proficiency' // 1c — Regents 65-84 (or safety-net 55-64)
+  | 'regents_proficiency' // 1c — Regents 65-84 (or approved safety-net / 45-variance)
   | 'advanced_ss_course' // 1d — Honors / Pre-AP / AP / IB / dual-enrollment
   | 'research_project' // 1e — civic-knowledge research project
   | 'hs_civic_project' // 2a — high school civic project (max 2, 3pt cap)

@@ -56,7 +56,7 @@ The Seal of Civic Readiness, established by the NYS Board of Regents in Septembe
 
 To earn the Seal, a student must complete all standard NYS diploma requirements **and** earn six points across two columns of pathway options, with a minimum of two points in each column.
 
-**Source:** New York State Seal of Civic Readiness Handbook, Updated 2024 (NYSED, Office of Standards and Instruction); the Criteria document at https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness.
+**Source:** New York State Seal of Civic Readiness Manual, Updated March 2025 (NYSED, Office of Standards and Instruction); the Criteria document at https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness.
 
 The Seal does **not** have a "with Distinction" tier (that is a feature of the Seal of Biliteracy, distinct from this seal).
 
@@ -66,7 +66,7 @@ The Seal does **not** have a "with Distinction" tier (that is a feature of the S
 |---|---|---|---|
 | 1a | 4 credits of social studies (Global I/II, US History, Participation in Government) | 1 | Required for graduation; auto-counts |
 | 1b | Mastery (≥85) on Global II or US History Regents | 1.5 | Repeatable — both exams count separately |
-| 1c | Proficiency (65–84) on Global II or US History Regents | 1 | Repeatable; safety-net scores honored per IEP/504 |
+| 1c | Proficiency (65–84) on Global II or US History Regents | 1 | Repeatable; approved safety-net, special-appeal, and 45-variance cases honored |
 | 1d | Advanced SS course (Honors / Pre-AP / AP / IB / dual-enrollment) | 0.5 | Repeatable; SCRC approves which courses qualify |
 | 1e | Civic-knowledge research project | 1 | SCRC pre-approves topic; rubric in NYSED Appendix F |
 | 2a | High School Civic Project | 1.5 | Maximum 2 instances → 3-point cap; SCRC approves; rubric in Appendix G |
@@ -190,8 +190,8 @@ regents_scores
   ├── exam_code (enum: 'GLOBAL_II', 'US_HISTORY')
   ├── score (int 0-100)
   ├── exam_date
-  ├── safety_net_applied (bool, IEP/504 alternate scoring)
-  └── proficiency_level (computed: 'mastery' if ≥85, 'proficiency' if 65-84, 'safety_net_pass' if 55-64 + flag)
+  ├── safety_net_applied (bool, safety-net / special-appeal / 45-variance)
+  └── proficiency_level (computed: 'mastery' if ≥85, 'proficiency' if 65-84, 'safety_net_pass' if 45-64 + flag)
 
 pathway_submissions  ◀── central entity for pathways with submitted evidence
                        (participation + research projects).
@@ -317,19 +317,19 @@ The civic-elective pathway (2c) splits across systems: the proficiency *grade* c
 - 2e (extra-curr/WBL) hours may aggregate across multiple activities and across all four years of HS
 - A student is `eligible` when: total points ≥ 6 AND knowledge column ≥ 2 AND participation column ≥ 2
 - `eligible` is not the same as `awarded`; counselor must confirm to advance the state
-- IEP/504 testing accommodations honored: safety-net Regents passes are scored as proficiency for 1c
+- Approved safety-net, special-appeal, and 45-variance Regents cases are scored as proficiency for 1c
 
 ### 4.4 Infinite Campus CSV import format (Phase 1)
 
 Counselor-uploaded CSV, one row per (student, course-or-exam) pair:
 
 ```csv
-student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit
-GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2024-2025,passed
-GN20271234,Goldberg,Maya,2027,course,SS_US_HISTORY,2025-2026,passed
-GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2025-06-15,87
-GN20271234,Goldberg,Maya,2027,regents,US_HISTORY,2026-06-12,91
-GN20271234,Goldberg,Maya,2027,course,AP_US_GOV,2026-2027,in_progress
+student_id,last_name,first_name,grad_year,kind,code,year_or_date,score_or_credit,safety_net_applied
+GN20271234,Goldberg,Maya,2027,course,SS_GLOBAL_II,2024-2025,passed,
+GN20271234,Goldberg,Maya,2027,course,SS_US_HISTORY,2025-2026,passed,
+GN20271234,Goldberg,Maya,2027,regents,GLOBAL_II,2025-06-15,87,false
+GN20271234,Goldberg,Maya,2027,regents,US_HISTORY,2026-06-12,45,true
+GN20271234,Goldberg,Maya,2027,course,AP_US_GOV,2026-2027,in_progress,
 ```
 
 **Fields:**
@@ -337,6 +337,7 @@ GN20271234,Goldberg,Maya,2027,course,AP_US_GOV,2026-2027,in_progress
 - `code` is a course code (matched against `course_catalog`) or exam code (`GLOBAL_II`, `US_HISTORY`)
 - `year_or_date`: school year (`YYYY-YYYY`) for courses, exam date (`YYYY-MM-DD`) for Regents
 - `score_or_credit`: integer Regents score (0–100), or one of `passed | failed | in_progress`
+- `safety_net_applied`: optional Regents-only boolean for safety-net / special-appeal / 45-variance cases
 
 The importer validates and reports a diff: which rows are new, which update existing records, which are unchanged. Admin reviews the diff before committing. All imports write to `audit_log` with the source filename and row count.
 
@@ -464,7 +465,7 @@ Every awarded point traces to a NYSED rule citation. The system enforces these b
 
 The four NYSED civic-readiness domains (Knowledge / Skills / Mindsets / Experiences) are surfaced as required tags on every reflection submission. This lets the audit pack PDF include a "domains addressed" matrix per student, which is how NYSED auditors evaluate whether a student's portfolio actually demonstrates civic readiness rather than merely accumulating points.
 
-**Testing accommodations** (IEP / Section 504): Regents safety-net passes (55–64 with the 45 variance) and accommodation-flagged scores are honored equivalently to standard proficiency, per NYSED policy. The `accommodations_flag` on the student record drives this branching automatically.
+**Testing accommodations and appeals:** Regents safety-net passes, special appeals, and 45-variance cases are honored equivalently to standard proficiency when the imported Regents row has `safety_net_applied=true`.
 
 ---
 
@@ -689,7 +690,7 @@ The point chart is reproduced in §1.2 of this document.
 
 - NYSED Seal of Civic Readiness Information: https://www.nysed.gov/standards-instruction/seal-civic-readiness-information
 - NYSED Criteria document: https://www.nysed.gov/standards-instruction/criteria-earn-seal-civic-readiness
-- NYSED Seal of Civic Readiness Manual (Updated 2024): https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual
+- NYSED Seal of Civic Readiness Manual (Updated March 2025): https://www.nysed.gov/standards-instruction/seal-civic-readiness-manual
 - NYSED Civic Readiness Initiative: https://www.nysed.gov/standards-instruction/civic-readiness-initiative
 - NYSED Approved Schools list: https://www.nysed.gov/curriculum-instruction/approved-seal-civic-readiness-schools
 - Seaford HS landing page (peer district): https://seafordhigh.seaford.k12.ny.us/students-families/nys-seal-of-civic-readiness

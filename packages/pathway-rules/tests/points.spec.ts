@@ -48,10 +48,18 @@ describe('computePoints — knowledge column (SIS-derived)', () => {
     expect(computePoints(ev).knowledge).toBe(0);
   });
 
-  it('does not award for safety-net below 55', () => {
+  it('awards 1pt for an approved 45-variance Regents score', () => {
     const ev: StudentEvidence = {
       ...empty,
-      regents: [{ exam: 'GLOBAL_II', score: 54, safetyNet: true }],
+      regents: [{ exam: 'GLOBAL_II', score: 45, safetyNet: true }],
+    };
+    expect(computePoints(ev).knowledge).toBe(1);
+  });
+
+  it('does not award for safety-net/variance below 45', () => {
+    const ev: StudentEvidence = {
+      ...empty,
+      regents: [{ exam: 'GLOBAL_II', score: 44, safetyNet: true }],
     };
     expect(computePoints(ev).knowledge).toBe(0);
   });
