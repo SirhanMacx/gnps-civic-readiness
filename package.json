@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
+  "packageManager": "pnpm@10.28.2",
   "engines": {
     "node": ">=20",
     "pnpm": ">=9"
@@ -10,6 +11,7 @@
   "scripts": {
     "dev": "pnpm --filter ./apps/web dev",
     "build": "pnpm --filter ./apps/web build",
+    "vercel-build": "pnpm --filter ./apps/web build && rm -rf .vercel/output && mkdir -p .vercel && cp -R apps/web/.vercel/output .vercel/output",
     "preview": "pnpm --filter ./apps/web preview",
     "check": "pnpm --filter ./apps/web check",
     "sync-vendored": "node scripts/sync-vendored.mjs"
