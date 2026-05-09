@@ -4,7 +4,7 @@
 
 **Open-source web portal for tracking the New York State Seal of Civic Readiness.** Built by Great Neck Public Schools — Social Studies Department. MIT-licensed. Forkable by any New York district.
 
-**Live demo:** https://gnps-civic-readiness.vercel.app
+**Live demo (prototype deployment):** https://gnps-civic-readiness.vercel.app — proof-of-concept only; not a recommended production architecture. See [Architecture](#architecture) below.
 
 ---
 
@@ -18,16 +18,20 @@ This portal does it differently: a public submission landing page (mirrors distr
 
 ## Status
 
-**Phase 1 — pilot, feature-complete demo.** The live demo includes public evidence intake for all non-SIS pathways, staff review queues, Infinite Campus CSV import, roster point calculation, and NYSED audit-pack export. **Phase 2** (live Infinite Campus integration, district SSO, student-facing progress portal, transcript write-back) is deferred until district IT review.
+**Feature-complete proof of concept.** The portal supports public evidence intake for all non-SIS pathways, staff review queues, Infinite Campus CSV import, roster point calculation, and NYSED audit-pack export. Infinite Campus remains the system of record; this portal is a workflow and evidence-tracking layer on top of it.
+
+The codebase is **technically deployable today**, but technically deployable does not mean institutionally approved. District use should follow a proper technology, curriculum, and privacy review path. See [`docs/go-live-checklist.md`](docs/go-live-checklist.md) for the distinction between demo-live, pilot-live, and production-live.
+
+**Deferred until district IT review:** live Infinite Campus integration, district SSO, student-facing progress portal, transcript write-back.
 
 ## How it works
 
 ```
-Student → /submit/service          → Supabase (students, pathway_submissions,
+Student → /submit/service          → Postgres (students, pathway_submissions,
                                       hours_log, audit_log)
                                    ↓
-              ┌─ supervisor email auto-sent (Phase 1: Resend) ─┐
-              ↓                                                 ↓
+              ┌─ supervisor email auto-sent (district SMTP) ─┐
+              ↓                                               ↓
        Supervisor clicks confirm                       Counselor approves
        (no account needed)                             reflection (logged in)
                                                                 ↓
@@ -58,13 +62,25 @@ The system implements all 11 NYSED pathways. The implementation keys pathways by
 
 ## Architecture
 
-**Phase 1 stack:** SvelteKit 2 (frontend + server) on Vercel + Supabase (Postgres + Storage + Auth) + Resend (transactional email). $0/mo on free tiers at GNPS scale (~6,800 students). MIT license on GitHub.
+**Recommended production path: district-owned or district-approved infrastructure.** This repository supports a self-hosted stack out of the box:
 
-**Phase 2 additions** (deferred until district IT review):
-- ClassLink / Google Workspace / Azure AD SSO replaces magic-link auth
+- SvelteKit 2 on Node 22 (frontend + server)
+- Postgres 16
+- Docker Compose for orchestration
+- Caddy as reverse proxy (auto-issues Let's Encrypt SSL)
+- District SMTP for transactional email
+- Self-hosted magic-link JWT sessions (no third-party auth provider required)
+- Filesystem (default) or S3-compatible evidence storage
+
+**Infinite Campus remains the system of record.** The portal is a workflow and evidence-tracking layer for evidence intake, review queues, point calculation, and audit preparation.
+
+**About the live demo / prototype vendors.** The live demo is a proof-of-concept deployment running on Vercel + Supabase + Resend. Those were useful prototype/demo choices; **they are not required vendors** and they are not the recommended production architecture. The prototype vendors are replaceable; the workflow is the value. For district use, use the self-hosted stack described above (or any district-approved equivalent).
+
+**Deferred until district IT review:**
+- ClassLink / Google Workspace / Azure AD SSO replacing magic-link auth
 - Student-facing portal with live progress and family-visible status
-- Live Infinite Campus integration (OneRoster API or nightly export job) replaces the manual CSV import path
-- Optional migration to GNPS-hosted Postgres or self-hosted SvelteKit
+- Live Infinite Campus integration (OneRoster API or nightly export job) replacing the manual CSV import path
+- Transcript write-back
 
 For full architectural detail see the [design document](dist/GNPS-Civic-Readiness-Portal-Design.pdf) (27 pages, also available as [.docx](dist/GNPS-Civic-Readiness-Portal-Design.docx)) and the [IT-handoff brief](dist/GNPS-IT-Handoff-Brief.pdf) (1 page, [.docx](dist/GNPS-IT-Handoff-Brief.docx)).
 
@@ -76,24 +92,38 @@ Fork the repo, edit `config/district.yaml` (logo URL, colors, district name, sup
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). New pathway logic and submission flows must include tests (Vitest for unit, Playwright for E2E).
 
-## Quick start (local development)
+## Quick start
 
-Prerequisites: Node 22+, pnpm 9+, [Supabase CLI](https://supabase.com/docs/guides/cli), Git.
+### Self-hosted (recommended for any real deployment)
+
+Prerequisites: a Linux host with Docker Engine 24+ and Docker Compose v2; a DNS A record pointing at it; district SMTP credentials.
+
+```bash
+git clone https://github.com/<owner>/gnps-civic-readiness
+cd gnps-civic-readiness
+cp .env.example .env
+# Edit .env — fill CIVICSEAL_DOMAIN, POSTGRES_PASSWORD, SESSION_SECRET (32+ chars),
+# SIGNED_LINK_SECRET (32+ chars), SMTP_*, and EMAIL_FROM.
+
+make up                                    # builds + starts db, migrations, app, caddy
+make admin EMAIL=you@your-district.k12.ny.us   # provision the bootstrap admin
+```
+
+Then visit `https://${CIVICSEAL_DOMAIN}/login` and request a one-time sign-in link.
+
+See [`docs/deployment-guide.md`](docs/deployment-guide.md) and [`docs/it-runbook.md`](docs/it-runbook.md) for the full procedure (smoke tests, backups, updates, rollback).
+
+### Local development
+
+Prerequisites: Node 22+, pnpm 9+, Postgres 16 (local or via Docker), Git.
 
 ```bash
 git clone https://github.com/<owner>/gnps-civic-readiness
 cd gnps-civic-readiness
 pnpm install
 cp .env.example apps/web/.env.local
-# Edit apps/web/.env.local — fill in values from your Supabase project
-
-# Either: use Supabase Cloud (recommended)
-supabase login
-supabase link --project-ref <your-project-ref>
-supabase db push
-
-# Or: local Supabase
-supabase start
+# Edit apps/web/.env.local — point DATABASE_URL at a local Postgres
+# and set SESSION_SECRET / SIGNED_LINK_SECRET to any 32+ character value.
 
 pnpm dev
 ```

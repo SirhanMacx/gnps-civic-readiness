@@ -38,9 +38,10 @@ db-shell:
 	docker compose exec db psql -U $${POSTGRES_USER:-civicseal} $${POSTGRES_DB:-civicseal}
 
 admin:
-	@if [ -z "$(EMAIL)" ]; then echo "usage: make admin EMAIL=alice@example.k12.ny.us"; exit 1; fi
-	@docker compose exec db psql -U $${POSTGRES_USER:-civicseal} $${POSTGRES_DB:-civicseal} \
-	  -c "insert into public.users (email, full_name, role) values ('$(EMAIL)', '$(EMAIL)', 'admin') on conflict (email) do update set role='admin'"
+	@if [ -z "$(EMAIL)" ]; then echo "Usage: make admin EMAIL=alice@example.k12.ny.us"; exit 1; fi
+	@docker compose exec -T db psql -U $${POSTGRES_USER:-civicseal} -d $${POSTGRES_DB:-civicseal} \
+		--set=email="$(EMAIL)" \
+		-c "insert into public.users (email, full_name, role) values (:'email', :'email', 'admin') on conflict (email) do update set role='admin'"
 	@echo "✓ $(EMAIL) is now an admin. Have them sign in at /login."
 
 status:

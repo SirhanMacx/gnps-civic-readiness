@@ -75,9 +75,16 @@ interface SignedPayload {
 
 const URL_TOKEN_SEPARATOR = '.';
 
+const MIN_SIGNED_LINK_SECRET_LENGTH = 32;
+
 function getSecretBytes(): Buffer {
   const secret = env.SIGNED_LINK_SECRET;
-  if (secret && secret.length >= 16) return Buffer.from(secret);
+  if (secret && secret.length >= MIN_SIGNED_LINK_SECRET_LENGTH) return Buffer.from(secret);
+  if (env.NODE_ENV === 'production') {
+    throw new Error(
+      'SIGNED_LINK_SECRET is missing or too short — set a 32+ character random value.'
+    );
+  }
   return Buffer.from('gnps-civic-dev-only-do-not-use-in-prod');
 }
 

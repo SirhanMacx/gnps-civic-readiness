@@ -3,7 +3,7 @@
 **Audience:** Great Neck Public Schools Technology Department.
 **Purpose:** Everything the IT team needs to take this system into production and operate it long-term, on GNPS-owned infrastructure, with no third-party SaaS.
 
-**Live demo (current):** https://gnps-civic-readiness.vercel.app (free Vercel + Supabase tier — supersedes once self-host is up)
+**Live demo (prototype only):** https://gnps-civic-readiness.vercel.app — proof-of-concept deployment on Vercel + Supabase + Resend. **Not the recommended production architecture.** Use it only to evaluate the workflow; do not put real student data into it. The recommended production path is the self-hosted stack documented in this runbook.
 **Source code (MIT):** https://github.com/SirhanMacx/gnps-civic-readiness
 
 ---
@@ -224,16 +224,23 @@ docker compose logs -f --tail=200 caddy  # access log (one JSON line per request
 
 ### Health checks
 
-The app exposes `GET /health` returning JSON `{ status: "ok", service, timestamp }`. Caddy proxies it; you can hit it externally for uptime monitoring:
+The app exposes two endpoints:
+
+- `GET /health` — app liveness. Returns 200 with JSON `{ status: "ok", ... }` whenever the Node process is up.
+- `GET /ready` — database readiness. Returns 200 with JSON `{ status: "ready", database: "ok", ... }` when the DB responds; returns 503 with `{ status: "not_ready", database: "unavailable", ... }` if the DB is unreachable.
 
 ```bash
-curl https://civicseal.greatneck.k12.ny.us/health
+curl https://civicseal.greatneck.k12.ny.us/health   # app liveness
+curl https://civicseal.greatneck.k12.ny.us/ready    # DB readiness
 ```
 
-For deeper health, the migration container exits non-zero if the DB is unreachable on boot. Set up your monitoring to alert on:
+Use `/health` for shallow uptime monitoring and `/ready` for orchestrator drain-on-DB-issue logic.
+
+The migration container also exits non-zero if the DB is unreachable on boot. Set up your monitoring to alert on:
 - `app` container not running for >5 min
 - `db` container not running for >2 min
 - HTTP `/health` returning non-200 for >3 consecutive checks
+- HTTP `/ready` returning non-200 for >5 consecutive checks
 - Disk usage on the host >85%
 
 ---

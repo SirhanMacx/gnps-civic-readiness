@@ -31,15 +31,21 @@ import { env as publicEnv } from '$env/dynamic/public';
 // ---------------------------------------------------------------------------
 
 const DEV_FALLBACK_SECRET = 'gnps-civic-dev-only-do-not-use-in-prod';
+const MIN_SIGNED_LINK_SECRET_LENGTH = 32;
 let warnedAboutMissingSecret = false;
 
 function getSecret(): string {
   const secret = env.SIGNED_LINK_SECRET;
-  if (secret && secret.length > 0) return secret;
+  if (secret && secret.length >= MIN_SIGNED_LINK_SECRET_LENGTH) return secret;
+  if (env.NODE_ENV === 'production') {
+    throw new Error(
+      'SIGNED_LINK_SECRET is missing or too short — set a 32+ character random value.'
+    );
+  }
   if (!warnedAboutMissingSecret) {
     console.warn(
-      '[email] SIGNED_LINK_SECRET not set; using insecure dev fallback. ' +
-        'Set this env var before going live.'
+      '[email] SIGNED_LINK_SECRET missing or under 32 chars; using insecure dev fallback. ' +
+        'Set this env var to a 32+ character random value before going live.'
     );
     warnedAboutMissingSecret = true;
   }

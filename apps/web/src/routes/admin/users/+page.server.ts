@@ -14,7 +14,7 @@ import {
 import { requireRole } from '$server/auth.js';
 import type { StaffRole } from '../../../app.d.ts';
 
-const VALID_ROLES = new Set<StaffRole>(['counselor', 'scrc_member', 'admin']);
+const VALID_ROLES = new Set<StaffRole>(['counselor', 'scrc_member', 'teacher', 'admin']);
 
 export const load: PageServerLoad = async () => {
   const staff: StaffRow[] = await listStaff();

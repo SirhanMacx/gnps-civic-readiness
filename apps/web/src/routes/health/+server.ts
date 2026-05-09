@@ -6,7 +6,7 @@
  * Node process is up and the SvelteKit router is serving. We deliberately keep
  * it lightweight so a transient DB hiccup doesn't trigger container restarts.
  *
- * If you want a deeper readiness probe, add /ready that pings the DB.
+ * For a deeper readiness probe (DB reachable), use /ready instead.
  */
 
 import type { RequestHandler } from './$types.js';

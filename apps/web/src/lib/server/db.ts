@@ -6,7 +6,10 @@
  *   1. `sql` — getter for the singleton `postgres` tagged-template client.
  *      Use this for joins, OR-conditions, or any query that doesn't fit the
  *      small builder API below. Reads `DATABASE_URL`, opts into
- *      `ssl: 'require'` when `NODE_ENV=production`.
+ *      `ssl: 'require'` only when `PGSSL=true`. The internal Docker Compose
+ *      Postgres service does not use TLS; managed Postgres instances usually do.
+ *      `NODE_ENV` is intentionally not used here — Docker production sets
+ *      NODE_ENV=production but talks to the internal db over plaintext.
  *
  *   2. `db.from(table)` — a tiny chainable query builder that mirrors the
  *      narrow subset of `supabase-js` we actually use. Just enough to keep
@@ -53,9 +56,9 @@ function getClient(): Sql {
         '(e.g. postgres://civicseal:civicseal@localhost:5432/civicseal).'
     );
   }
-  const isProd = env.NODE_ENV === 'production';
+  const requireSsl = (env.PGSSL ?? 'false').toLowerCase() === 'true';
   cached = postgres(url, {
-    ssl: isProd ? 'require' : false,
+    ssl: requireSsl ? 'require' : false,
     max: 10,
     transform: { undefined: null },
     onnotice: () => undefined

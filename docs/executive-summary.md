@@ -59,8 +59,8 @@ Detailed runbook at [`docs/it-runbook.md`](it-runbook.md). IT-specific brief at 
 | Milestone | Status |
 |---|---|
 | Research, design, spec, plan | ✅ done |
-| Phase 1 development | ✅ done — feature-complete on Vercel/Supabase free tier as a working demo |
-| Phase 1.5 self-host migration | ✅ done — zero SaaS dependencies, Docker stack, full IT runbook |
+| Phase 1 development | ✅ done — feature-complete; initial demo stood up on Vercel/Supabase/Resend free tier as a prototype, not as a recommended production architecture |
+| Phase 1.5 self-host migration | ✅ done — zero SaaS dependencies, Docker stack, full IT runbook (recommended production path) |
 | GNPS IT deployment | pending IT scheduling |
 | First pilot cohort (Class of 2027) | targeted for fall 2026 onboarding |
 | First seals awarded | targeted for June 2027 graduation |
@@ -70,7 +70,7 @@ Detailed runbook at [`docs/it-runbook.md`](it-runbook.md). IT-specific brief at 
 
 - **GitHub:** https://github.com/SirhanMacx/gnps-civic-readiness — public, MIT-licensed
 - **Latest release:** v0.2.0 (2026-05-04) at https://github.com/SirhanMacx/gnps-civic-readiness/releases/tag/v0.2.0
-- **Live demo (legacy free-tier; superseded by self-host):** https://gnps-civic-readiness.vercel.app
+- **Live demo (prototype only; not the recommended production architecture):** https://gnps-civic-readiness.vercel.app
 
 ## Asks of leadership
 

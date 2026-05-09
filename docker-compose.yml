@@ -57,6 +57,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-civicseal}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-civicseal}
+      PGSSL: ${PGSSL:-false}
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET must be set}
       SIGNED_LINK_SECRET: ${SIGNED_LINK_SECRET:?SIGNED_LINK_SECRET must be set}
       PUBLIC_APP_URL: https://${CIVICSEAL_DOMAIN}

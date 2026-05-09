@@ -44,11 +44,11 @@ GNPS should not start with scattered forms and spreadsheets. The better position
 
 ## Recommended Rollout
 
-1. **Now: Social Studies pilot.** Use the Vercel/Supabase demo with real workflow testing but limited students. Verify course catalog, SCRC members, and counselor roles.
+1. **Now: Social Studies evaluation.** Walk the workflow end-to-end against the proof-of-concept deployment with sample data only — no real student records into any unapproved environment. Verify course catalog, SCRC members, and counselor roles.
 2. **Before public launch: NYSED application.** Curriculum leadership must apply through the NYSED Business Portal; the portal cannot make GNPS eligible to award the Seal by itself.
 3. **Quarterly IC import.** Start with the documented CSV upload: August, October, January, April, and post-Regents June. This gets most auto-populated value without IT integration risk.
 4. **Family-facing GNPS page.** Embed or link the portal from the GNPS site with a short explanation, contact email, and student/family directions.
-5. **IT handoff.** Move to district-owned accounts, custom domain, email authentication, backups, and FERPA review. Decide between Vercel/Supabase, self-hosted Docker, or GNPS-hosted Postgres.
+5. **IT handoff.** Stand up the recommended self-hosted Docker stack on district-owned or district-approved infrastructure with district-issued accounts, custom domain, district SMTP, backups, and FERPA review. Vercel/Supabase/Resend were prototype/demo choices, not required vendors.
 6. **Phase 2 integration.** Replace CSV upload with nightly SFTP or OneRoster where available. Keep the CSV path as the emergency fallback.
 7. **Graduation reporting.** Export the audit pack, mark transcript/diploma records, and report Program Service Code 8313 through SIRS.
 

@@ -27,6 +27,7 @@ function homeFor(role: string | null | undefined): string | null {
   if (role === 'admin') return '/admin';
   if (role === 'scrc_member') return '/scrc';
   if (role === 'counselor') return '/counselor';
+  if (role === 'teacher') return '/teacher';
   return null;
 }
 
@@ -90,11 +91,9 @@ export const actions: Actions = {
 
     const appOrigin = publicEnv.PUBLIC_APP_URL ?? url.origin;
     const next = (form.get('next') as string | null) ?? null;
-    const sep = appOrigin.endsWith('/') ? '' : '';
     const signinUrl =
       `${appOrigin.replace(/\/$/, '')}/auth/callback?token=${encodeURIComponent(token)}` +
       (next ? `&next=${encodeURIComponent(next)}` : '');
-    void sep;
 
     const mail = await sendMagicLink({
       to: email,

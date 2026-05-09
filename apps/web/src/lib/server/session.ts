@@ -33,20 +33,22 @@ export interface SessionPayload extends JWTPayload {
   role: StaffRole;
 }
 
+const MIN_SECRET_LENGTH = 32;
+
 let secretKeyCached: Uint8Array | null = null;
 
 function getSecretKey(): Uint8Array {
   if (secretKeyCached) return secretKeyCached;
   const secret = env.SESSION_SECRET;
-  if (!secret || secret.length < 16) {
+  if (!secret || secret.length < MIN_SECRET_LENGTH) {
     if (env.NODE_ENV === 'production') {
       throw new Error(
-        'SESSION_SECRET is missing or too short — set a 32+ byte random value.'
+        'SESSION_SECRET is missing or too short — set a 32+ character random value.'
       );
     }
     console.warn(
-      '[session] SESSION_SECRET not set; using insecure dev fallback. ' +
-        'Set this env var before going live.'
+      '[session] SESSION_SECRET missing or under 32 chars; using insecure dev fallback. ' +
+        'Set this env var to a 32+ character random value before going live.'
     );
     secretKeyCached = new TextEncoder().encode(
       'dev-only-do-not-use-in-prod-' + Date.now().toString(36)

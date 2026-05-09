@@ -84,22 +84,20 @@ GNPS-hosted Linux VM, single host:
 
 ## Cost trajectory
 
-| Phase | Vercel | Supabase | Resend | **Total** |
-|---|---|---|---|---|
-| Phase 1 (free tiers) | $0 | $0 | $0 | **$0/mo** |
-| Phase 2 (typical at GNPS scale) | $0 | $0–25 | $0 | **$0–25/mo** |
-| Self-hosted alternative | GNPS infrastructure + ops time | Same | District SMTP or Resend | District-internal cost |
+| Deployment | Cost | Notes |
+|---|---|---|
+| Self-hosted on GNPS infrastructure (recommended) | District-internal cost only — no third-party SaaS fees | Existing Linux host, district SMTP, district backup; ~1 hr/wk steady-state ops |
+| Demo / prototype on managed SaaS (Vercel + Supabase + Resend) | $0/mo on free tiers at GNPS scale | **Not a recommended production architecture.** Useful only as a non-production demo, with no real student data, where district policy permits. Vendors are replaceable; the workflow is the value. |
 
-GNPS scale (~6,800 students; ~412 per graduating class) fits comfortably within all three free tiers for years. Supabase Pro at $25/mo only becomes relevant if the district wants daily backups beyond the free-tier point-in-time recovery, or if the database exceeds 500 MB (unlikely until ~year 5 at GNPS scale).
+GNPS scale (~6,800 students; ~412 per graduating class) is well within the resource footprint of a single 2 vCPU / 4 GB RAM Linux VM for years.
 
 ---
 
 ## What we are NOT asking
 
-- **No new infrastructure procurement.** Phase 1 doesn't touch GNPS infra.
-- **No vendor contracts to negotiate.** All Phase 1 services are usable on free tiers under district-owned accounts or under existing personal accounts during pilot.
-- **No proprietary lock-in.** Codebase is MIT-licensed and portable. If the district later decides to self-host, that path is supported with no application code changes.
-- **No student data leaves the United States.** Supabase US-East region is the only data-residency point.
+- **No new infrastructure procurement.** The recommended path uses an existing Linux host inside GNPS infrastructure.
+- **No third-party vendor lock-in.** Vercel, Supabase, and Resend were prototype/demo choices, not required vendors. The repository ships a self-hosted Docker stack as the recommended production architecture, and the codebase is MIT-licensed and portable.
+- **No student data on third-party SaaS for production.** Recommended deployment keeps student records on district infrastructure.
 - **No CMS migration.** Finalsite stays as-is. Integration option A (recommended) is just a DNS CNAME alongside existing Finalsite hosting.
 
 ---
