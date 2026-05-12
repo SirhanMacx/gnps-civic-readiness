@@ -13,9 +13,9 @@
  * Streams as application/zip with a Content-Disposition that matches
  * `nysed_audit_pack_class_of_<year>.zip`.
  *
- * Evidence file bytes are pulled from the `evidence` Supabase Storage bucket;
- * any download failure is recorded as a warning (zipped as `errors.txt`)
- * rather than failing the whole export — districts can re-run after fixing.
+ * Evidence file bytes are pulled through the configured storage backend; any
+ * download failure is recorded as a warning (zipped as `errors.txt`) rather
+ * than failing the whole export — districts can re-run after fixing.
  *
  * The endpoint also writes a single audit_log row with action
  * `admin_exported_audit_pack` so the act of exporting is itself audited.
@@ -175,7 +175,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
   }
 
   const body = zipBytes.byteLength > 0 ? zipBytes : new Uint8Array(0);
-  // Use ArrayBuffer for Vercel/Node response body. Convert if it's a SharedArrayBuffer.
+  // Use ArrayBuffer for the response body. Convert if it's a SharedArrayBuffer.
   const responseBody: ArrayBuffer = (() => {
     const ab = body.buffer;
     if (ab instanceof ArrayBuffer) {

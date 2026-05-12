@@ -12,6 +12,7 @@
   function roleLabel(r: string): string {
     if (r === 'counselor') return 'Counselor';
     if (r === 'scrc_member') return 'SCRC Member';
+    if (r === 'teacher') return 'Teacher';
     if (r === 'admin') return 'Admin';
     return r;
   }
@@ -27,21 +28,23 @@
   </p>
   <h1 class="font-display text-3xl font-bold text-primary mb-2">Staff</h1>
   <p class="text-sm text-muted mb-6 leading-relaxed max-w-3xl">
-    Counselors, SCRC committee members, and admins. Inviting a staff member
-    sends a Supabase magic-link email so they can sign in.
+    Counselors, SCRC committee members, teachers, and admins only. Provisioning
+    creates the staff account row; it does not email an invite. The staff member
+    then visits <code>/login</code> and requests a one-time sign-in link.
   </p>
 
   {#if form && 'invited' in form && form.invited}
     <div class="mb-4 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm">
-      Invited <strong>{form.invited.email}</strong> as
-      {roleLabel(form.invited.role as string)}.
+      Provisioned <strong>{form.invited.email}</strong> as
+      {roleLabel(form.invited.role as string)}. They can now visit <code>/login</code>
+      and request a one-time sign-in link.
       {#if form.invited.warning}
-        <span class="text-yellow-700 block text-xs mt-1">⚠ {form.invited.warning}</span>
+        <span class="text-yellow-700 block text-xs mt-1">{form.invited.warning}</span>
       {/if}
     </div>
   {/if}
   {#if form && 'inviteError' in form && form.inviteError}
-    <p class="mb-3 text-sm text-red-600">Invite failed: {form.inviteError}</p>
+    <p class="mb-3 text-sm text-red-600">Provision failed: {form.inviteError}</p>
   {/if}
   {#if form && 'roleError' in form && form.roleError}
     <p class="mb-3 text-sm text-red-600">Role update failed: {form.roleError}</p>
@@ -57,7 +60,7 @@
     class="mb-6 rounded-lg border border-border bg-white px-4 py-4"
     use:enhance
   >
-    <h2 class="font-display font-semibold text-primary text-sm mb-3">Invite a staff member</h2>
+    <h2 class="font-display font-semibold text-primary text-sm mb-3">Provision a staff member</h2>
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
       <input
         name="email"
@@ -75,6 +78,7 @@
       <select name="role" class="rounded-md border border-border bg-white px-3 py-2">
         <option value="counselor">Counselor</option>
         <option value="scrc_member">SCRC Member</option>
+        <option value="teacher">Teacher</option>
         <option value="admin">Admin</option>
       </select>
     </div>
@@ -83,7 +87,7 @@
         type="submit"
         class="rounded-md bg-primary text-white px-4 py-2 text-sm font-display font-semibold hover:bg-primary-dark"
       >
-        Send invite
+        Provision access
       </button>
     </div>
   </form>
@@ -117,6 +121,7 @@
                 >
                   <option value="counselor">Counselor</option>
                   <option value="scrc_member">SCRC Member</option>
+                  <option value="teacher">Teacher</option>
                   <option value="admin">Admin</option>
                 </select>
               </form>

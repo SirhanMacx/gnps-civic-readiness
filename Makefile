@@ -11,7 +11,7 @@ help:
 	@echo "  migrate        Run pending DB migrations"
 	@echo "  shell          Open a shell inside the app container"
 	@echo "  db-shell       Open psql against the running DB"
-	@echo "  admin EMAIL=   Insert (or upgrade) a user to role=admin"
+	@echo "  admin EMAIL=   Provision or upgrade a user to role=admin"
 	@echo "  status         Show service status + health"
 	@echo "  build-image    Rebuild the app Docker image without cache"
 	@echo "  clean          DESTRUCTIVE: stop + remove containers, volumes, networks"
@@ -38,9 +38,8 @@ db-shell:
 	docker compose exec db psql -U $${POSTGRES_USER:-civicseal} $${POSTGRES_DB:-civicseal}
 
 admin:
-	@if [ -z "$(EMAIL)" ]; then echo "usage: make admin EMAIL=alice@example.k12.ny.us"; exit 1; fi
-	@docker compose exec db psql -U $${POSTGRES_USER:-civicseal} $${POSTGRES_DB:-civicseal} \
-	  -c "insert into public.users (email, full_name, role) values ('$(EMAIL)', '$(EMAIL)', 'admin') on conflict (email) do update set role='admin'"
+	@if [ -z "$(EMAIL)" ]; then echo "Usage: make admin EMAIL=alice@example.k12.ny.us"; exit 1; fi
+	@docker compose run --rm -e ADMIN_EMAIL="$(EMAIL)" db-migrate sh -c "npm install --silent --no-package-lock postgres && node bootstrap-admin.mjs"
 	@echo "✓ $(EMAIL) is now an admin. Have them sign in at /login."
 
 status:

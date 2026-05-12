@@ -1,9 +1,9 @@
 # GNPS Civic Readiness Portal — IT Runbook
 
 **Audience:** Great Neck Public Schools Technology Department.
-**Purpose:** Everything the IT team needs to take this system into production and operate it long-term, on GNPS-owned infrastructure, with no third-party SaaS.
+**Purpose:** Everything the IT team needs to take this system into production and operate it long-term, using the self-hosted path or an equivalent district-approved provider path.
 
-**Live demo (current):** https://gnps-civic-readiness.vercel.app (free Vercel + Supabase tier — supersedes once self-host is up)
+**Live demo (prototype only):** https://gnps-civic-readiness.vercel.app — use it only to evaluate the workflow with sample data. Do not put real student data into it. The concrete deployment path in this runbook is the self-hosted stack; districts may choose managed providers only through normal approval.
 **Source code (MIT):** https://github.com/SirhanMacx/gnps-civic-readiness
 
 ---
@@ -72,7 +72,7 @@ A 2 vCPU / 4 GB RAM / 80 GB disk Linux VM has 4× headroom for years.
 
 ### Firewall (district-side)
 - **Inbound to server:** TCP 80 (HTTP, used only for ACME + redirect to HTTPS), TCP 443 (HTTPS app traffic), TCP 22 (SSH for ops; restrict source IPs to district network).
-- **Outbound from server:** TCP 443 (Docker Hub, GitHub, Let's Encrypt, Supabase if migration import is used), TCP 587 or 25 (SMTP to district mail server).
+- **Outbound from server:** TCP 443 (Docker Hub, GitHub, Let's Encrypt, and any district-approved managed services if used), TCP 587 or 25 (SMTP to district mail server).
 
 ### SMTP credentials
 From the district mail administrator, you'll need:
@@ -130,6 +130,7 @@ Fill in **all** values. The required ones are:
 | `POSTGRES_PASSWORD` | (32+ char random) | Generate: `openssl rand -base64 32` |
 | `SESSION_SECRET` | (32+ char random) | Generate: `openssl rand -hex 32` |
 | `SIGNED_LINK_SECRET` | (32+ char random) | Generate: `openssl rand -hex 32` (different from SESSION_SECRET) |
+| `PGSSL` | `false` for internal Docker Postgres | Use `true` only for a managed Postgres service requiring TLS |
 | `SMTP_HOST` | `smtp.greatneck.k12.ny.us` | From mail admin |
 | `SMTP_USER` | `civicseal-portal` | From mail admin |
 | `SMTP_PASS` | (mailbox password) | From mail admin |
@@ -224,16 +225,23 @@ docker compose logs -f --tail=200 caddy  # access log (one JSON line per request
 
 ### Health checks
 
-The app exposes `GET /health` returning JSON `{ status: "ok", service, timestamp }`. Caddy proxies it; you can hit it externally for uptime monitoring:
+The app exposes two endpoints:
+
+- `GET /health` — app liveness. Returns 200 with JSON `{ status: "ok", ... }` whenever the Node process is up.
+- `GET /ready` — database readiness. Returns 200 with JSON `{ status: "ready", database: "ok", ... }` when the DB responds; returns 503 with `{ status: "not_ready", database: "unavailable", ... }` if the DB is unreachable.
 
 ```bash
-curl https://civicseal.greatneck.k12.ny.us/health
+curl https://civicseal.greatneck.k12.ny.us/health   # app liveness
+curl https://civicseal.greatneck.k12.ny.us/ready    # DB readiness
 ```
 
-For deeper health, the migration container exits non-zero if the DB is unreachable on boot. Set up your monitoring to alert on:
+Use `/health` for shallow uptime monitoring and `/ready` for orchestrator drain-on-DB-issue logic.
+
+The migration container also exits non-zero if the DB is unreachable on boot. Set up your monitoring to alert on:
 - `app` container not running for >5 min
 - `db` container not running for >2 min
 - HTTP `/health` returning non-200 for >3 consecutive checks
+- HTTP `/ready` returning non-200 for >5 consecutive checks
 - Disk usage on the host >85%
 
 ---
@@ -256,7 +264,7 @@ make up               # restarts containers; migration runner auto-applies any n
 
 **Rolling back** to a previous version:
 ```bash
-git checkout v0.1.0
+git checkout <previous-known-good-tag>
 make build-image && make up
 ```
 
@@ -463,5 +471,5 @@ If the district ever sunsets the program (or migrates to a vendor), here's how t
 - **B — Infinite Campus integration:** `docs/infinite-campus-integration.md`
 - **C — Customization for non-GNPS districts:** `docs/customization.md`
 - **D — Data import format:** `docs/data-import-guide.md`
-- **E — Original design document:** `dist/GNPS-Civic-Readiness-Portal-Design.pdf` (27 pages)
+- **E — Archived original design document:** `dist/GNPS-Civic-Readiness-Portal-Design.pdf` (historical prototype artifact; not the current production recommendation)
 - **F — IT-handoff brief (executive summary):** `dist/GNPS-IT-Handoff-Brief.pdf` (6 pages)

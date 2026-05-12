@@ -1,5 +1,7 @@
 # GNPS Civic Readiness Portal — Design Document
 
+> **Archived prototype design note.** This document records the original May 4 prototype plan. It is not the current production recommendation. For meeting-ready guidance, use `docs/meeting-brief.md`, `docs/go-live-checklist.md`, `docs/deployment-guide.md`, and `docs/it-handoff-brief.md`. Current framing: Infinite Campus remains the system of record; the portal is the workflow, evidence, and audit layer; real student data belongs only in district-approved environments.
+
 **Project:** Open-source web application for tracking the New York State Seal of Civic Readiness at Great Neck Public Schools
 **Version:** 1.0 — Design Phase
 **Date:** May 4, 2026

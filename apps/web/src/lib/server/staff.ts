@@ -1,13 +1,13 @@
 /**
  * Staff user management used by /admin/users.
  *
- * Phase 1 staff (counselors, SCRC committee, admins) authenticate via the
- * self-hosted magic-link flow. The /users table is the source of truth;
- * inviteStaff inserts the row, and the user signs in with /login from then
- * on. We DO NOT auto-mail an invite link — the admin shares the portal URL
- * directly and the staff member requests their own magic link.
+ * Staff (counselors, SCRC committee members, teachers, admins) authenticate
+ * via the self-hosted magic-link flow. The /users table is the staff-access
+ * source of truth; inviteStaff provisions the row, and the user requests
+ * their own one-time sign-in link from /login from then on. We do NOT
+ * auto-mail an invite link — the admin shares the portal URL directly.
  *
- * `inviteStaff` inserts the staff row. If the email already exists in
+ * `inviteStaff` provisions the staff row. If the email already exists in
  * `users` the call fails fast (we don't silently re-invite).
  *
  * `removeStaff` hard-deletes the row. The audit_log row preserves the
@@ -50,7 +50,7 @@ export interface RemoveStaffInput {
   removedBy: string;
 }
 
-const VALID_ROLES = new Set<StaffRole>(['counselor', 'scrc_member', 'admin']);
+const VALID_ROLES = new Set<StaffRole>(['counselor', 'scrc_member', 'teacher', 'admin']);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function rowToStaff(r: Record<string, unknown>): StaffRow {
@@ -75,14 +75,13 @@ export async function listStaff(): Promise<StaffRow[]> {
 }
 
 /**
- * Invite a staff member by email and create the matching `users` row.
+ * Provision a staff member by email and create the matching `users` row.
  *
- * - Email is normalized to lowercase for storage + the magic-link send.
+ * - Email is normalized to lowercase for storage + later magic-link issuance.
  * - If the email already exists in `users`, we fail fast (the admin should
  *   `updateStaffRole` instead of duplicating).
- * - We try to issue a Supabase magic-link invite; if the auth admin call is
- *   not available (e.g. tests), we still create the `users` row and return
- *   the failure as a warning in `error`.
+ * - This call does not send any email. After provisioning, the staff member
+ *   visits /login and requests their own one-time sign-in link.
  */
 export async function inviteStaff(input: InviteStaffInput): Promise<InviteStaffResult> {
   const email = input.email.trim().toLowerCase();

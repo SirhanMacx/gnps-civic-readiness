@@ -46,7 +46,7 @@ The cleanest path to adoption is:
 
 1. Fork the repo
 2. Edit `config/district.yaml` — colors, logo URL, support email, course catalog seed, SCRC committee emails
-3. Follow [docs/deployment-guide.md](docs/deployment-guide.md) for your own Supabase + Vercel projects
+3. Follow [docs/deployment-guide.md](docs/deployment-guide.md) for a self-hosted or district-approved deployment path
 4. Submit a PR back if you build something other districts could reuse (e.g., a new SIS importer beyond Infinite Campus, a new export format, a translation)
 
 Improvements that are district-agnostic should always go upstream. District-specific things stay in your fork's `config/district.yaml`.

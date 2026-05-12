@@ -61,4 +61,4 @@ The importer is **idempotent**: re-uploading the same CSV does nothing. New rows
 
 ## Phase 2
 
-Once district IT integrates with Infinite Campus directly (OneRoster API or nightly export), this manual CSV upload becomes a fallback path. The schema above stays the same; an adapter transforms IC's response into these fields. See the [design doc](../dist/GNPS-Civic-Readiness-Portal-Design.pdf) §3.2 for Phase 2 architecture.
+Once district IT integrates with Infinite Campus directly (OneRoster API or nightly export), this manual CSV upload becomes a fallback path. The schema above stays the same; an adapter transforms IC's response into these fields. See the [Infinite Campus integration guide](infinite-campus-integration.md) for the Phase 2 architecture and SIS coordination questions.

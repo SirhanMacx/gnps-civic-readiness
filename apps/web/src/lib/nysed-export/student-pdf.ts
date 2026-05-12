@@ -7,8 +7,8 @@
  * are clipped (with a footnote) rather than overflowing onto a second page.
  *
  * Brand tokens (navy + accent orange) come from the apps/web theme; we keep
- * them inline here because this package is consumed in a Vercel function with
- * no Svelte runtime.
+ * them inline here because this package is consumed from server routes without
+ * a Svelte runtime.
  */
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';

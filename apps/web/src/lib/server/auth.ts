@@ -106,3 +106,31 @@ export async function requireRole(
   }
   return user;
 }
+
+/**
+ * Gate a route to any of the given staff roles. Use inside +layout.server.ts
+ * files for routes shared across multiple roles (e.g. /teacher is open to
+ * teachers, SCRC members, and admins).
+ *
+ * - Anonymous → 303 redirect to /login (with optional ?next= return path)
+ * - Logged in but role not in `roles` → 403
+ *
+ * Returns the StaffUser when authorization passes.
+ */
+export async function requireAnyRole(
+  event: RequestEvent,
+  roles: readonly StaffRole[]
+): Promise<StaffUser> {
+  const user = event.locals.user ?? (await getCurrentUser(event));
+  if (!user) {
+    const next = encodeURIComponent(event.url.pathname + event.url.search);
+    throw redirect(303, `/login?next=${next}`);
+  }
+  if (!roles.includes(user.role)) {
+    throw error(
+      403,
+      `This area is restricted to: ${roles.map((r) => r.replace('_', ' ')).join(', ')}.`
+    );
+  }
+  return user;
+}
