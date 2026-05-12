@@ -4,7 +4,7 @@
 
 **Open-source web portal for tracking the New York State Seal of Civic Readiness.** Built by Great Neck Public Schools — Social Studies Department. MIT-licensed. Forkable by any New York district.
 
-**Live demo (prototype deployment):** https://gnps-civic-readiness.vercel.app — proof-of-concept only; not a recommended production architecture. See [Architecture](#architecture) below.
+**Live demo (prototype deployment):** https://gnps-civic-readiness.vercel.app — proof-of-concept only. It proves the workflow and user experience; it is not approved for real student data. See [Architecture](#architecture) below.
 
 ---
 
@@ -18,7 +18,7 @@ This portal does it differently: a public submission landing page (mirrors distr
 
 ## Status
 
-**Feature-complete proof of concept.** The portal supports public evidence intake for all non-SIS pathways, staff review queues, Infinite Campus CSV import, roster point calculation, and NYSED audit-pack export. Infinite Campus remains the system of record; this portal is a workflow and evidence-tracking layer on top of it.
+**v0.2.0 feature-complete proof of concept.** The portal supports public evidence intake for all non-SIS pathways, staff review queues, Infinite Campus CSV import, roster point calculation, and NYSED audit-pack export. Infinite Campus remains the system of record; this portal is a workflow, evidence, and audit layer on top of it.
 
 The codebase is **technically deployable today**, but technically deployable does not mean institutionally approved. District use should follow a proper technology, curriculum, and privacy review path. See [`docs/go-live-checklist.md`](docs/go-live-checklist.md) for the distinction between demo-live, pilot-live, and production-live.
 
@@ -62,7 +62,7 @@ The system implements all 11 NYSED pathways. The implementation keys pathways by
 
 ## Architecture
 
-**Recommended production path: district-owned or district-approved infrastructure.** This repository supports a self-hosted stack out of the box:
+**Recommended production story: district-owned or district-approved infrastructure.** This repository supports a self-hosted stack out of the box:
 
 - SvelteKit 2 on Node 22 (frontend + server)
 - Postgres 16
@@ -72,9 +72,9 @@ The system implements all 11 NYSED pathways. The implementation keys pathways by
 - Self-hosted magic-link JWT sessions (no third-party auth provider required)
 - Filesystem (default) or S3-compatible evidence storage
 
-**Infinite Campus remains the system of record.** The portal is a workflow and evidence-tracking layer for evidence intake, review queues, point calculation, and audit preparation.
+**Infinite Campus remains the system of record.** The portal is a workflow, evidence, and audit layer for evidence intake, review queues, point calculation, and NYSED audit preparation. It does not replace IC, and transcript/reporting decisions stay with district-approved systems and staff.
 
-**About the live demo / prototype vendors.** The live demo is a proof-of-concept deployment running on Vercel + Supabase + Resend. Those were useful prototype/demo choices; **they are not required vendors** and they are not the recommended production architecture. The prototype vendors are replaceable; the workflow is the value. For district use, use the self-hosted stack described above (or any district-approved equivalent).
+**About the live demo / providers.** The public demo is only a prototype for leadership review. The district may choose the self-hosted stack, district cloud services, or other approved providers after technology/privacy review. No real student data should enter the public demo or any unapproved environment. The providers are replaceable; the workflow is the value.
 
 **Deferred until district IT review:**
 - ClassLink / Google Workspace / Azure AD SSO replacing magic-link auth
@@ -82,7 +82,7 @@ The system implements all 11 NYSED pathways. The implementation keys pathways by
 - Live Infinite Campus integration (OneRoster API or nightly export job) replacing the manual CSV import path
 - Transcript write-back
 
-For full architectural detail see the [design document](dist/GNPS-Civic-Readiness-Portal-Design.pdf) (27 pages, also available as [.docx](dist/GNPS-Civic-Readiness-Portal-Design.docx)) and the [IT-handoff brief](dist/GNPS-IT-Handoff-Brief.pdf) (1 page, [.docx](dist/GNPS-IT-Handoff-Brief.docx)).
+For current meeting and technical detail, start with the [meeting brief](docs/meeting-brief.md), [go-live checklist](docs/go-live-checklist.md), [deployment guide](docs/deployment-guide.md), and [IT-handoff brief](docs/it-handoff-brief.md). Older design PDFs in `dist/` are archived prototype artifacts and should not be treated as the current production recommendation.
 
 ## For districts adopting this
 
@@ -103,7 +103,8 @@ git clone https://github.com/<owner>/gnps-civic-readiness
 cd gnps-civic-readiness
 cp .env.example .env
 # Edit .env — fill CIVICSEAL_DOMAIN, POSTGRES_PASSWORD, SESSION_SECRET (32+ chars),
-# SIGNED_LINK_SECRET (32+ chars), SMTP_*, and EMAIL_FROM.
+# SIGNED_LINK_SECRET (32+ chars), SMTP_*, EMAIL_FROM, and PGSSL.
+# PGSSL=false for internal Docker Postgres; PGSSL=true only for managed DBs requiring TLS.
 
 make up                                    # builds + starts db, migrations, app, caddy
 make admin EMAIL=you@your-district.k12.ny.us   # provision the bootstrap admin
@@ -135,13 +136,15 @@ Open http://localhost:5173 — the GNPS-themed landing page should load.
 | Doc | Audience |
 |---|---|
 | [Project goal & rollout plan](docs/project-goal-and-rollout-plan.md) | Social Studies leadership, district IT, project sponsors |
-| [Design document](dist/GNPS-Civic-Readiness-Portal-Design.pdf) | Leadership, architects, anyone evaluating the system |
-| [IT-handoff brief](dist/GNPS-IT-Handoff-Brief.pdf) | District technology departments |
+| [docs/meeting-brief.md](docs/meeting-brief.md) | Leadership meeting talking points and governance framing |
+| [docs/go-live-checklist.md](docs/go-live-checklist.md) | Demo / pilot / production readiness boundary |
+| [docs/it-handoff-brief.md](docs/it-handoff-brief.md) | District technology departments |
 | [docs/deployment-guide.md](docs/deployment-guide.md) | Engineers deploying for a district |
 | [docs/data-import-guide.md](docs/data-import-guide.md) | Counselors importing IC data |
 | [docs/customization.md](docs/customization.md) | Districts re-skinning for their own brand |
-| [docs/superpowers/specs/](docs/superpowers/specs/) | Source-of-truth design spec |
-| [docs/superpowers/plans/](docs/superpowers/plans/) | 28-task implementation plan |
+| [dist/admin-share/](dist/admin-share/) | Forwardable meeting packet exports |
+| [docs/superpowers/specs/](docs/superpowers/specs/) | Archived prototype design notes |
+| [docs/superpowers/plans/](docs/superpowers/plans/) | Archived implementation plan |
 
 ## License
 

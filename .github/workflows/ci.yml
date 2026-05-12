@@ -42,7 +42,7 @@ jobs:
       - name: Test (web app)
         run: pnpm --filter ./apps/web test
 
-      - name: Build (Vercel adapter — legacy)
+      - name: Build (SvelteKit adapter output)
         run: pnpm --filter ./apps/web build
 
       - name: Build (Node adapter — self-host)

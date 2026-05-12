@@ -1,6 +1,6 @@
 # Project Goal & Rollout Plan
 
-**Working goal:** give the Great Neck Social Studies Department a defensible, low-friction way to launch the New York State Seal of Civic Readiness from zero infrastructure to a district-owned program that can be reviewed by curriculum leadership, adopted by IT, and reused by other New York districts.
+**Working goal:** give the Great Neck Social Studies Department a defensible, low-friction way to launch the New York State Seal of Civic Readiness from zero infrastructure to a serious prototype, then to a district-approved program that can be reviewed by curriculum leadership, adopted by IT, and reused by other New York districts.
 
 This document stands in for the requested `/goal` record because no local `/goal` CLI skill is installed in this workspace. Keep it current as the project source of truth for non-engineers.
 
@@ -16,7 +16,7 @@ Peer districts show the usual implementation pattern:
 | [Three Village CSD](https://sites.google.com/3villagecsd.org/seal-of-civic-readiness/home) | Public Google Site explaining the two columns and pathway menu. | Clear public education layer, but not a tracking system. |
 | [Connetquot](https://www.ccsdli.org/seal-of-civic-readiness) | Social Studies-owned program page with approved course lists and contact workflow. | Course lists should be SCRC-approved and district-specific, but the data should not live only on a static page. |
 
-GNPS should not start with scattered forms and spreadsheets. The better position is: public submission portal plus staff approval workflow plus Infinite Campus-backed auto-counting.
+GNPS should not start with scattered forms and spreadsheets. The better position is: public submission portal plus staff approval workflow plus Infinite Campus-backed auto-counting. Infinite Campus remains the system of record; this portal is the workflow, evidence, and audit layer.
 
 ## What Infinite Campus Can Auto-Populate
 
@@ -48,7 +48,7 @@ GNPS should not start with scattered forms and spreadsheets. The better position
 2. **Before public launch: NYSED application.** Curriculum leadership must apply through the NYSED Business Portal; the portal cannot make GNPS eligible to award the Seal by itself.
 3. **Quarterly IC import.** Start with the documented CSV upload: August, October, January, April, and post-Regents June. This gets most auto-populated value without IT integration risk.
 4. **Family-facing GNPS page.** Embed or link the portal from the GNPS site with a short explanation, contact email, and student/family directions.
-5. **IT handoff.** Stand up the recommended self-hosted Docker stack on district-owned or district-approved infrastructure with district-issued accounts, custom domain, district SMTP, backups, and FERPA review. Vercel/Supabase/Resend were prototype/demo choices, not required vendors.
+5. **IT handoff.** Stand up the recommended self-hosted Docker stack, or another district-approved provider path, with district-issued accounts, custom domain, district SMTP/approved mail service, backups, and FERPA review. No real student data should enter any unapproved demo environment.
 6. **Phase 2 integration.** Replace CSV upload with nightly SFTP or OneRoster where available. Keep the CSV path as the emergency fallback.
 7. **Graduation reporting.** Export the audit pack, mark transcript/diploma records, and report Program Service Code 8313 through SIRS.
 

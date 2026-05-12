@@ -10,8 +10,10 @@
 
 import type { Handle } from '@sveltejs/kit';
 import { getCurrentUser } from '$server/auth.js';
+import { assertProductionRuntimeConfig } from '$server/runtime-config.js';
 
 export const handle: Handle = async ({ event, resolve }) => {
+  assertProductionRuntimeConfig();
   event.locals.user = await getCurrentUser(event);
   return resolve(event);
 };

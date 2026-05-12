@@ -6,7 +6,7 @@ Three things are not the same.
 
 This document distinguishes **demo-live**, **pilot-live**, and **production-live**, and lists what each one requires before a district uses the Civic Readiness Portal with real student data.
 
-Infinite Campus remains the system of record at every tier; the portal is a workflow and evidence-tracking layer.
+Infinite Campus remains the system of record at every tier; the portal is a workflow, evidence, and audit layer.
 
 ---
 

@@ -1,5 +1,7 @@
 # GNPS Civic Readiness Portal — Phase 1 Implementation Plan
 
+> **Archived prototype implementation plan.** This plan preserves the original build sequence and may mention prototype vendors/services. It is not the current production recommendation. For current meeting and IT guidance, use `docs/meeting-brief.md`, `docs/go-live-checklist.md`, `docs/deployment-guide.md`, and `docs/it-handoff-brief.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Apply @superpowers:test-driven-development discipline throughout.
 
 **Goal:** Ship the four-week Phase 1 of the GNPS Civic Readiness Portal — public submission flows for all six pathway types, two-tier verification (supervisor email + counselor approval + SCRC project review), GNPS-themed admin roster with CSV-imported IC data, and NYSED audit-pack export. Demo-able on a public Vercel URL by end of week 4 at $0/mo.

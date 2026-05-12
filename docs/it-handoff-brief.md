@@ -15,11 +15,11 @@
 
 ## What this is
 
-An open-source web portal for tracking the New York State Seal of Civic Readiness — the +1 Diploma Pathway distinction approved by the NYS Board of Regents in 2021. The portal collects civic-knowledge data (auto-pulled from Infinite Campus where possible) and civic-participation evidence (service hours, projects, capstones submitted by students with supervisor and counselor verification). At year-end it produces a NYSED-compliant audit pack and a roster CSV for the transcript office.
+An open-source web portal for tracking the New York State Seal of Civic Readiness — the +1 Diploma Pathway distinction approved by the NYS Board of Regents in 2021. Infinite Campus remains the system of record. The portal is a workflow, evidence, and audit layer: it imports civic-knowledge data from IC where possible, collects civic-participation evidence, routes supervisor/counselor/SCRC review, and produces a NYSED audit pack plus roster CSV.
 
-**As of v0.2.0, the system is fully self-hostable on GNPS infrastructure.** Zero third-party SaaS dependencies. Any Linux box with Docker can run the entire stack — application, database, email, file storage, SSL termination — via `docker compose up`. Student records never leave the district.
+**As of v0.2.0, the system is fully self-hostable on GNPS infrastructure.** The repository ships a complete Docker stack — application, database, email relay integration, file storage, SSL termination — via `docker compose up`. GNPS may also choose district-approved managed services or providers after privacy/technology review; the prototype does not require a specific vendor.
 
-Phase 1.5 (self-host) is the recommended deployment path for production. Phase 2 (live Infinite Campus integration) builds on top of Phase 1.5 once IT has the deploy stable.
+Phase 1.5 (self-host or district-approved equivalent) is the recommended deployment path for any real student data. Phase 2 (live Infinite Campus integration) builds on top once IT has the deployment stable.
 
 The items below are what IT needs to provide / configure to take the system live.
 
@@ -33,7 +33,7 @@ The items below are what IT needs to provide / configure to take the system live
 | 2 | Provision a Linux VM (Ubuntu 22.04 / Debian 12 / Rocky 9 — district preference). 2 vCPU + 4 GB RAM + 50 GB disk. Public IP on ports 80/443. Outbound internet access. | ~30 min | Infrastructure |
 | 3 | DNS A record for `civicseal.greatneck.k12.ny.us` pointing at the VM's public IP. Caddy auto-issues a Let's Encrypt cert on first boot. | ~5 min | Network/DNS |
 | 4 | SMTP credentials for the district mail server. Recommend creating a dedicated mailbox `civicseal-portal@greatneck.k12.ny.us` with auth to send as `civicseal@greatneck.k12.ny.us`. | ~1 hour | Email Administrator |
-| 5 | FERPA / privacy review. **Self-hosted v0.2.0 keeps all student data on district infrastructure** — no third-party data processor. Encryption at rest via the VM's disk encryption (LUKS / cloud KMS). Audit log captures every state transition. | ~1 hour | Privacy/Compliance |
+| 5 | FERPA / privacy review. **Self-hosted v0.2.0 can keep student data on district infrastructure.** If GNPS chooses any managed provider, approve the contract/DPA and data flow first. Encryption at rest via VM disk encryption or approved managed-provider controls. Audit log captures every state transition. | ~1 hour | Privacy/Compliance |
 | 6 | Deploy: `git clone` → `cp .env.example .env` (fill in 7 values) → `make up`. Caddy obtains SSL automatically. Migrations apply automatically. ~10 minutes from clone to live URL. | ~10 min once Steps 2–4 are done | IT (one engineer) |
 | 7 | First admin: `make admin EMAIL=jon@greatneck.k12.ny.us` provisions the bootstrap admin. They log in via magic link and invite the rest of staff via the admin UI. | ~5 min | IT |
 | 8 | Infinite Campus integration. Phase 1.5 supports manual quarterly CSV uploads (works today). Phase 2 wires the live SFTP / OneRoster path. See [docs/infinite-campus-integration.md](https://github.com/SirhanMacx/gnps-civic-readiness/blob/main/docs/infinite-campus-integration.md) for the IC Ad Hoc Reporting recipe + 8 specific vendor questions. | Phase 1.5: ~30 min/quarter; Phase 2: 1–2 weeks of integration work | SIS Administrator |
@@ -86,8 +86,9 @@ GNPS-hosted Linux VM, single host:
 
 | Deployment | Cost | Notes |
 |---|---|---|
-| Self-hosted on GNPS infrastructure (recommended) | District-internal cost only — no third-party SaaS fees | Existing Linux host, district SMTP, district backup; ~1 hr/wk steady-state ops |
-| Demo / prototype on managed SaaS (Vercel + Supabase + Resend) | $0/mo on free tiers at GNPS scale | **Not a recommended production architecture.** Useful only as a non-production demo, with no real student data, where district policy permits. Vendors are replaceable; the workflow is the value. |
+| Self-hosted on GNPS infrastructure (recommended concrete path) | District-internal cost only | Existing Linux host, district SMTP, district backup; ~1 hr/wk steady-state ops |
+| District-approved managed services | Depends on provider contract | Acceptable only after IT/privacy approval; may be appropriate if GNPS prefers managed Postgres, object storage, email, or hosting |
+| Public demo / prototype | $0/mo today | **Sample data only.** Useful for leadership review; not approved for real student records. |
 
 GNPS scale (~6,800 students; ~412 per graduating class) is well within the resource footprint of a single 2 vCPU / 4 GB RAM Linux VM for years.
 
@@ -95,9 +96,9 @@ GNPS scale (~6,800 students; ~412 per graduating class) is well within the resou
 
 ## What we are NOT asking
 
-- **No new infrastructure procurement.** The recommended path uses an existing Linux host inside GNPS infrastructure.
-- **No third-party vendor lock-in.** Vercel, Supabase, and Resend were prototype/demo choices, not required vendors. The repository ships a self-hosted Docker stack as the recommended production architecture, and the codebase is MIT-licensed and portable.
-- **No student data on third-party SaaS for production.** Recommended deployment keeps student records on district infrastructure.
+- **No new infrastructure procurement required for the recommended path.** The self-hosted path can use an existing Linux host inside GNPS infrastructure.
+- **No third-party vendor lock-in.** The repository ships a self-hosted Docker stack and is MIT-licensed. If GNPS prefers managed services, those choices remain district decisions.
+- **No real student data in unapproved environments.** The public demo is for sample data and workflow evaluation only.
 - **No CMS migration.** Finalsite stays as-is. Integration option A (recommended) is just a DNS CNAME alongside existing Finalsite hosting.
 
 ---
@@ -157,4 +158,4 @@ A sample CSV in the exact format is committed to the repo at [docs/sample-ic-dat
 - **Source code:** https://github.com/SirhanMacx/gnps-civic-readiness — MIT-licensed, transferable to a GNPS-owned org on approval
 - **Contact:** Jon — Social Studies Department, Great Neck Public Schools
 
-The full design document (architecture, data model, user flows, NYSED compliance mapping, repository structure, risks) is available as a 27-page companion PDF/DOCX.
+The older 27-page design document is retained only as an archived prototype artifact. For current production-review guidance, use the meeting brief, go-live checklist, deployment guide, IT runbook, and Infinite Campus integration guide.

@@ -2,9 +2,9 @@
 
 This walks an engineer from a clean clone to a working production URL on **district-owned or district-approved infrastructure**. ~30–60 minutes once the prerequisites (Linux host, DNS, SMTP) are in place.
 
-> **Recommended production path:** the self-hosted Docker Compose stack described below, on infrastructure your district owns or has formally approved.
+> **Recommended production story:** the self-hosted Docker Compose stack described below is the concrete path this repo ships today. A district may instead choose managed databases, object storage, email services, or hosting providers, but those choices should be district-approved before real student data is used.
 >
-> **Infinite Campus remains the system of record.** This portal is a workflow and evidence-tracking layer.
+> **Infinite Campus remains the system of record.** This portal is a workflow, evidence, and audit layer.
 >
 > Demo-live, pilot-live, and production-live are different things. Technically deployable does not mean institutionally approved. See [`docs/go-live-checklist.md`](go-live-checklist.md) for the readiness distinction before any district uses this with real student data.
 
@@ -58,9 +58,9 @@ Edit `.env`. The required values are:
 | `SIGNED_LINK_SECRET` | 32+ chars · `openssl rand -hex 32` (different from `SESSION_SECRET`) |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_SECURE` | From your mail admin |
 | `EMAIL_FROM` | An address the SMTP relay is authorized to send from |
-| `PGSSL` | `false` (default) for the internal Docker Postgres; `true` only if you point `DATABASE_URL` at a managed Postgres that requires TLS |
+| `PGSSL` | `false` for the internal Docker Postgres service; `true` only for a managed/district-approved Postgres service that requires TLS |
 
-Production refuses to boot if `SESSION_SECRET` or `SIGNED_LINK_SECRET` is missing or under 32 characters.
+Production refuses to serve requests if `SESSION_SECRET` or `SIGNED_LINK_SECRET` is missing or under 32 characters. Use different random values for the two secrets.
 
 ## Step 2 · First boot
 
@@ -121,6 +121,6 @@ These require district IT involvement and are scoped in the [IT-handoff brief](.
 
 ## Demo / prototype deployments
 
-The live demo at `gnps-civic-readiness.vercel.app` runs on Vercel + Supabase + Resend. Those were useful **prototype/demo choices** — fast to stand up for evaluators — but they are **not required vendors** and not the recommended production architecture.
+The live demo at `gnps-civic-readiness.vercel.app` is a prototype for evaluators. It is not approved for real student data.
 
-If your district policy permits a non-production demo against managed services, the historical Phase 1 design (Vercel + Supabase + Resend) is documented in `docs/superpowers/specs/` and `docs/superpowers/plans/`. **Do not put real student data into an unapproved demo or prototype environment.** For any pilot or production use, follow the self-hosted procedure above (or a district-approved equivalent) and the [`docs/go-live-checklist.md`](go-live-checklist.md).
+If your district policy permits a non-production demo against managed services, keep it sample-data-only unless the district has explicitly approved the data flow and provider terms. **Do not put real student data into an unapproved demo or prototype environment.** For any pilot or production use, follow the self-hosted procedure above or a district-approved equivalent, and complete the [`docs/go-live-checklist.md`](go-live-checklist.md).

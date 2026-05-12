@@ -7,17 +7,19 @@
 
 ## One-sentence description
 
-A workflow and evidence-tracking layer for the New York State Seal of Civic Readiness — students submit evidence, supervisors confirm, staff review against NYSED rubrics, Infinite Campus data auto-populates Civic Knowledge points, and a year-end NYSED audit pack is produced.
+A workflow, evidence, and audit layer for the New York State Seal of Civic Readiness — students submit evidence, supervisors confirm, staff review against NYSED rubrics, Infinite Campus data auto-populates Civic Knowledge points, and a year-end NYSED audit pack is produced.
 
 ## Leadership framing
 
-> Infinite Campus remains the system of record. The Civic Readiness Portal is a workflow and evidence-tracking layer.
+> Infinite Campus remains the system of record. The Civic Readiness Portal is a workflow, evidence, and audit layer.
 >
 > Demo-live, pilot-live, and production-live are different things.
 >
 > Technically deployable does not mean institutionally approved.
 >
-> The prototype vendors are replaceable; the workflow is the value.
+> The prototype services are replaceable; the workflow is the value.
+>
+> The district can choose its approved providers, hosting, identity, email, and database path after review.
 >
 > I'm not asking to bypass IT. I'm asking for the right review path.
 >
@@ -46,13 +48,13 @@ The portal closes that gap by combining four things into one workflow:
 - One Postgres database holding students, submissions, hours, evidence files, course data, Regents scores, users, and an audit log.
 - Outbound email to a district SMTP relay for supervisor confirmations and staff sign-in.
 - Optional Infinite Campus CSV import; live IC integration is deferred until IT review.
-- Designed to run inside district infrastructure on a single Linux host with Docker.
+- Designed to run inside district infrastructure on a single Linux host with Docker, or on equivalent district-approved services.
 
 Infinite Campus stays the system of record. The portal records workflow events (submissions, approvals, scores, exports) and prepares the NYSED audit pack at year-end.
 
 ## Current technical stack
 
-**Recommended production deployment (self-hosted):**
+**Recommended concrete production path (self-hosted):**
 
 - SvelteKit 2 on Node 22 — application server
 - Postgres 16 — relational store
@@ -62,7 +64,7 @@ Infinite Campus stays the system of record. The portal records workflow events (
 - Self-hosted magic-link JWT sessions — staff authentication
 - Filesystem (default) or S3-compatible — evidence storage
 
-**Live demo (prototype only):** Vercel + Supabase + Resend on free tiers. Useful for evaluators to click around. **Not a recommended production architecture.** The prototype vendors are replaceable; the workflow is the value.
+**Live demo (prototype only):** useful for evaluators to click around with sample data. It is not approved for real student records. The district can decide later whether production should run self-hosted, on district cloud, or on approved managed services.
 
 ## What the prototype demonstrates
 
@@ -74,11 +76,26 @@ Infinite Campus stays the system of record. The portal records workflow events (
 - Teacher quick-push for class-wide projects, with NYSED cap rules enforced
 - Per-student PDF audit record and year-end NYSED audit-pack zip export
 - Audit log on every state transition
-- 62 automated tests, MIT-licensed open-source code
+- 121 automated tests, MIT-licensed open-source code
+
+## 10-minute meeting demo path
+
+1. **Open the landing page.** Say: "This is a prototype workflow, not a request to bypass IT. Infinite Campus remains the system of record."
+2. **Show `/submit`.** Point out that students submit only what IC cannot already know: hours, projects, reflections, capstones, and advisor/supervisor evidence.
+3. **Open one evidence form.** Emphasize required fields, supervisor confirmation, and the audit trail.
+4. **Show staff login framing.** Say staff accounts are provisioned by admins; staff then request a one-time sign-in link. Production auth can stay magic-link or move to district SSO after review.
+5. **Show admin import concept.** Explain the IC CSV import as the bridge from the SIS to auto-counted Civic Knowledge points.
+6. **Show roster/export language.** Close with the year-end NYSED audit pack: the system reduces spreadsheet work and makes every point traceable.
+
+## Provider / service answer
+
+If asked whether the district must use the current prototype services:
+
+> No. The public demo proves the workflow. The codebase is open source and v0.2.0 is fully self-hostable. GNPS Technology can choose the approved hosting, database, email, storage, identity, and backup path. My goal is to bring a serious prototype to the right review process, not to choose vendors for the district.
 
 ## What remains for IT / curriculum review
 
-- **Hosting.** Decide where the production deployment lives — district VM, district VMware/cloud tenancy, or another district-approved option.
+- **Hosting.** Decide where the production deployment lives — district VM, district VMware/cloud tenancy, or another district-approved provider/service.
 - **Authentication.** Today: self-hosted magic-link JWT sessions. Phase 2 option: ClassLink / Google Workspace / Azure AD SSO.
 - **Privacy / FERPA.** Confirm the data flow (intake, review, evidence storage, IC import, audit export) meets district privacy requirements. Confirm the demo-data boundary — no real student data into any unapproved environment.
 - **Database.** Postgres 16 inside Docker is the default. If district policy prefers a managed Postgres, the connection string is a single env var.
@@ -94,13 +111,15 @@ Infinite Campus stays the system of record. The portal records workflow events (
 
 > Infinite Campus remains the system of record.
 >
-> The Civic Readiness Portal is a workflow and evidence-tracking layer.
+> The Civic Readiness Portal is a workflow, evidence, and audit layer.
 >
 > Demo-live, pilot-live, and production-live are different things.
 >
 > Technically deployable does not mean institutionally approved.
 >
-> The prototype vendors are replaceable; the workflow is the value.
+> The prototype services are replaceable; the workflow is the value.
+>
+> The district can choose the approved provider path.
 >
 > I'm not asking to bypass IT. I'm asking for the right review path.
 >

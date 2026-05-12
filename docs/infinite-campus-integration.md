@@ -1,6 +1,6 @@
 # Infinite Campus Integration — Complete Wiring Guide
 
-**Purpose:** turn raw Infinite Campus data into auto-counted Civic Knowledge column points for every GNPS student, with no student input required.
+**Purpose:** turn raw Infinite Campus data into auto-counted Civic Knowledge column points for every GNPS student, with no student input required. Infinite Campus remains the system of record; this portal is the workflow, evidence, and audit layer.
 
 **Audience:** GNPS IT (specifically whoever administers the Infinite Campus instance) + the Civic Readiness Portal maintainer.
 
@@ -326,7 +326,7 @@ Specific considerations:
 - **Data minimization.** We pull only the fields in §1. We don't pull addresses, IEP details, discipline, or attendance; the import stores only the yes/no Regents safety-net / appeal / variance flag needed for point calculation.
 - **Access control.** Only counselors, SCRC committee members, and admins can see student records in the portal. Each access is logged to `audit_log`.
 - **Retention.** The portal retains student records as long as the seal program runs + district records-retention policy (typically 7 years post-graduation for FERPA). Decommissioning procedure in the IT runbook.
-- **Disclosure.** The portal does not share data with any third party. Even the Vercel/Supabase Phase 1 deploy was a directory-information processor under FERPA's school-official exception with vendor DPAs in place. Self-hosted Phase 2 keeps everything inside GNPS.
+- **Disclosure.** The portal should not send real student data to any unapproved demo or prototype environment. The recommended self-hosted deployment keeps data on district infrastructure; any managed-provider path requires district approval, contract/DPA review, and a documented data flow.
 - **Rights.** A parent or eligible student can request to see their record (via existing GNPS FERPA process). The portal's `/admin/student/[id]` view (or a direct DB query) provides this.
 
 ---
@@ -376,7 +376,7 @@ The Knowledge column points are computed at read time — there's no `knowledge_
 
 | Phase | What's happening | IC's involvement | Effort |
 |---|---|---|---|
-| **Today** | Manual quarterly CSV upload via `/admin/import`. Works against the current Vercel/Supabase deployment AND the future self-hosted deployment. | None (admin runs the IC report manually) | 0 |
+| **Today** | Manual quarterly CSV upload via `/admin/import`. Works against the prototype with sample data and the self-hosted/district-approved deployment with real data. | None (admin runs the IC report manually) | 0 |
 | **Phase 1.5** | Same flow, on self-hosted GNPS infrastructure. Identical UX. | Same as above. | 0 (config swap) |
 | **Phase 2 — SFTP** | Nightly SFTP poll picks up the IC report automatically, applies it, alerts on issues. | IC schedules the report; SFTP server (district-internal) accepts the drop. | ~1 week of IT engineering |
 | **Phase 2 — OneRoster** | Live API pull. Roster + enrollment changes flow into the portal within hours. | OneRoster module enabled; OAuth2 credentials provisioned. | ~2 weeks if vendor coordination is smooth |

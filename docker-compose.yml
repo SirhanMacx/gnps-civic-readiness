@@ -37,6 +37,10 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-civicseal}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-civicseal}
+      # Internal Docker Postgres is plaintext on the private Docker network.
+      # Set PGSSL=true only when adapting this service to a managed Postgres
+      # connection string that requires TLS.
+      PGSSL: ${PGSSL:-false}
     volumes:
       - ./supabase/migrations:/migrations:ro
       - ./scripts:/scripts:ro
@@ -57,6 +61,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-civicseal}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-civicseal}
+      # Use false for the internal Docker Postgres service. Use true only for
+      # managed/district-approved Postgres services that require TLS.
       PGSSL: ${PGSSL:-false}
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET must be set}
       SIGNED_LINK_SECRET: ${SIGNED_LINK_SECRET:?SIGNED_LINK_SECRET must be set}

@@ -25,6 +25,12 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
+const PGSSL = (process.env.PGSSL ?? 'false').toLowerCase();
+if (PGSSL !== 'true' && PGSSL !== 'false') {
+  console.error('PGSSL must be either "true" or "false".');
+  process.exit(1);
+}
+
 // In a Docker container the working dir is /scripts; the bind mount puts
 // migrations at /migrations. In local dev it's <repo>/supabase/migrations.
 const MIGRATIONS_DIR = process.env.MIGRATIONS_DIR
@@ -39,7 +45,7 @@ const MIGRATIONS_DIR = process.env.MIGRATIONS_DIR
     })();
 
 const sql = postgres(DATABASE_URL, {
-  ssl: process.env.PGSSL === 'true' ? 'require' : false,
+  ssl: PGSSL === 'true' ? 'require' : false,
   max: 1,
   onnotice: () => {} // suppress NOTICE noise
 });

@@ -28,17 +28,18 @@
   </p>
   <h1 class="font-display text-3xl font-bold text-primary mb-2">Staff</h1>
   <p class="text-sm text-muted mb-6 leading-relaxed max-w-3xl">
-    Counselors, SCRC committee members, teachers, and admins. Provisioning a
-    staff member creates their portal account; they then request a one-time
-    sign-in link from <code>/login</code>.
+    Counselors, SCRC committee members, teachers, and admins only. Provisioning
+    creates the staff account row; it does not email an invite. The staff member
+    then visits <code>/login</code> and requests a one-time sign-in link.
   </p>
 
   {#if form && 'invited' in form && form.invited}
     <div class="mb-4 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm">
       Provisioned <strong>{form.invited.email}</strong> as
-      {roleLabel(form.invited.role as string)}. They can request a one-time sign-in link from <code>/login</code>.
+      {roleLabel(form.invited.role as string)}. They can now visit <code>/login</code>
+      and request a one-time sign-in link.
       {#if form.invited.warning}
-        <span class="text-yellow-700 block text-xs mt-1">⚠ {form.invited.warning}</span>
+        <span class="text-yellow-700 block text-xs mt-1">{form.invited.warning}</span>
       {/if}
     </div>
   {/if}

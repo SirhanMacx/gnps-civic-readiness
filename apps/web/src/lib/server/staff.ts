@@ -2,10 +2,10 @@
  * Staff user management used by /admin/users.
  *
  * Staff (counselors, SCRC committee members, teachers, admins) authenticate
- * via the self-hosted magic-link flow. The /users table is the source of
- * truth; inviteStaff provisions the row, and the user requests their own
- * one-time sign-in link from /login from then on. We do NOT auto-mail an
- * invite link — the admin shares the portal URL directly.
+ * via the self-hosted magic-link flow. The /users table is the staff-access
+ * source of truth; inviteStaff provisions the row, and the user requests
+ * their own one-time sign-in link from /login from then on. We do NOT
+ * auto-mail an invite link — the admin shares the portal URL directly.
  *
  * `inviteStaff` provisions the staff row. If the email already exists in
  * `users` the call fails fast (we don't silently re-invite).
